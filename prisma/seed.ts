@@ -549,9 +549,24 @@ async function seedDemo() {
   console.log(`✓ demo accounts: demo@director-os.local / director-demo (plus bence@, dora@${process.env.SEED_DEMO_ADMIN === "true" ? ", admin@" : ""})`);
 }
 
+async function taxonomyUpToDate() {
+  const [version, skills, deps, challenges] = await Promise.all([
+    db.skillTaxonomyVersion.findUnique({ where: { version: TAXONOMY_VERSION } }),
+    db.skill.count(),
+    db.skillDependency.count(),
+    db.challenge.count(),
+  ]);
+  return Boolean(version) && skills >= SKILLS.length && deps >= DEPENDENCIES.length && challenges >= CHALLENGES.length;
+}
+
 async function main() {
-  await seedTaxonomy();
-  if (process.env.SEED_DEMO !== "false") await seedDemo();
+  // On deploys the database is usually already seeded; skip the slow, row-by-row work.
+  if (process.env.SEED_FORCE === "true" || !(await taxonomyUpToDate())) await seedTaxonomy();
+  else console.log(`✓ taxonomy v${TAXONOMY_VERSION} already present`);
+
+  const demoExists = await db.user.findUnique({ where: { email: "demo@director-os.local" } });
+  if (process.env.SEED_DEMO !== "false" && (!demoExists || process.env.SEED_DEMO_RESET === "true" || process.env.SEED_FORCE === "true")) await seedDemo();
+  else if (demoExists) console.log("✓ demo accounts already present (set SEED_DEMO_RESET=true to reset them)");
   if (process.env.SEED_ADMIN_EMAIL) {
     const user = await db.user.findUnique({ where: { email: process.env.SEED_ADMIN_EMAIL } });
     const role = await db.role.findUniqueOrThrow({ where: { key: "ADMIN" } });
