@@ -54,7 +54,7 @@ export default async function AssessSkill({ params, searchParams }: { params: Pr
                   <div className="text-xs text-faint">
                     {fmt.date(h.createdAt)}{" "}{t("· rubric v")}{h.rubric.version}
                   </div>
-                  {h.reflection && <p className="mt-1 text-muted">{h.reflection}</p>}
+                  {h.reflection && <p className="mt-1 text-muted">{t(h.reflection)}</p>}
                 </div>
               </li>
             ))}

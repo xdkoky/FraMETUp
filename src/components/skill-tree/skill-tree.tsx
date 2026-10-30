@@ -265,7 +265,7 @@ function TreeInner({ data }: { data: TreeData }) {
   }, [data.skills, stateOf]);
 
   return (
-    <div className="relative h-[calc(100dvh-3.5rem)] lg:h-dvh w-full overflow-hidden">
+    <div className="relative h-[calc(100dvh-7.5rem)] lg:h-dvh w-full overflow-hidden">
       {/* Toolbar */}
       <div className="absolute left-3 right-3 top-3 z-20 flex flex-col gap-2 pointer-events-none lg:left-5 lg:top-5 lg:right-auto lg:w-[360px]">
         <div className="card pointer-events-auto p-3 shadow-xl shadow-black/30">

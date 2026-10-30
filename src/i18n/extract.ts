@@ -10,7 +10,8 @@ import { STATE_STYLE } from "@/lib/skill-state";
 import { OBSERVATION_LABEL, PROJECT_STATUS_LABEL, PROJECT_TYPE_LABEL, VISIBILITY_LABEL } from "@/lib/utils";
 import { PRACTICE_TIERS, XP_LABEL } from "@/lib/xp/xp";
 import { REFLECTION_PROMPTS } from "@/lib/reflection";
-import { NAV_ITEMS, SECONDARY_NAV } from "@/components/shell/nav-items";
+import { GROWTH_NAV, NAV_ITEMS, SECONDARY_NAV } from "@/components/shell/nav-items";
+import { QUIZ } from "@/lib/quiz/questions";
 
 function walk(dir: string, out: string[] = []) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -44,7 +45,15 @@ export function extractKeys(root = path.join(process.cwd(), "src")): Set<string>
   for (const s of Object.values(STATE_STYLE)) [s.label, s.short, s.description].forEach((v) => keys.add(v));
   PRACTICE_TIERS.forEach((t) => keys.add(t.name));
   REFLECTION_PROMPTS.forEach((p) => keys.add(p.label));
-  [...NAV_ITEMS, ...SECONDARY_NAV].forEach((n) => keys.add(n.label));
+  [...NAV_ITEMS, ...GROWTH_NAV, ...SECONDARY_NAV].forEach((n) => keys.add(n.label));
+  NAV_ITEMS.forEach((n) => keys.add(n.short));
+  for (const q of QUIZ) {
+    keys.add(q.prompt);
+    if (q.hint) keys.add(q.hint);
+    if (q.kind === "multi" || q.kind === "choice" || q.kind === "visual" || q.kind === "hotspot" || q.kind === "sequence") q.options.forEach((o) => keys.add(o.label));
+    if (q.kind === "order") q.items.forEach((i) => keys.add(i.label));
+    if (q.kind === "match") q.pairs.forEach((p) => (keys.add(p.left), keys.add(p.right)));
+  }
   // Module-level option lists rendered through t()
   [
     "Any length", "Up to 1½ hours", "Up to half a day", "Up to a day",

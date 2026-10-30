@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { signIn } from "./helpers";
 
 // The UI defaults to Hungarian; these specs assert on the English copy.
 test.beforeEach(async ({ context, baseURL }) => {
@@ -6,13 +7,12 @@ test.beforeEach(async ({ context, baseURL }) => {
 });
 
 test("the app is usable on a phone", async ({ page }) => {
-  await page.goto("/login");
-  await page.getByLabel("Email").fill("demo@frametup.local");
-  await page.getByLabel("Password").fill("frametup-demo");
-  await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page).toHaveURL(/\/dashboard/);
-  await page.getByRole("button", { name: "Open navigation" }).click();
-  await page.getByRole("dialog", { name: "Navigation" }).getByRole("link", { name: "Skill Tree" }).click();
+  await signIn(page, "demo@frametup.local", "frametup-demo");
+  // Bottom tab bar, and the "More" sheet for everything else
+  await page.getByRole("button", { name: "More" }).click();
+  await expect(page.getByRole("dialog", { name: "Navigation" }).getByRole("link", { name: "Timeline" })).toBeVisible();
+  await page.getByRole("button", { name: "Close navigation" }).click();
+  await page.getByRole("navigation", { name: "Main sections" }).getByRole("link", { name: "Tree" }).click();
   await expect(page).toHaveURL(/\/skills/);
   await page.getByLabel("Search skills").fill("Pacing");
   await page.getByRole("listbox", { name: "Search results" }).getByRole("button", { name: /Pacing/ }).click();
