@@ -12,7 +12,8 @@ export type XpKind =
   | "FEEDBACK_RECEIVED"
   | "REVIEW_GIVEN"
   | "CHALLENGE_COMPLETED"
-  | "PROJECT_REVISITED";
+  | "PROJECT_REVISITED"
+  | "DRILL_PRACTISED";
 
 export const XP_BASE: Record<XpKind, number> = {
   PROJECT_CREATED: 10,
@@ -24,6 +25,7 @@ export const XP_BASE: Record<XpKind, number> = {
   REVIEW_GIVEN: 25,
   CHALLENGE_COMPLETED: 60,
   PROJECT_REVISITED: 20,
+  DRILL_PRACTISED: 15,
 };
 
 export const XP_LABEL: Record<XpKind, string> = {
@@ -36,6 +38,7 @@ export const XP_LABEL: Record<XpKind, string> = {
   REVIEW_GIVEN: "Reviewed a peer's work",
   CHALLENGE_COMPLETED: "Completed a challenge",
   PROJECT_REVISITED: "Revisited an earlier project",
+  DRILL_PRACTISED: "Practised a drill",
 };
 
 export const DAILY_CAP = 250;

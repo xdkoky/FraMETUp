@@ -9,6 +9,8 @@ import { computeAll } from "./mastery";
 import { getTaxonomy } from "./taxonomy";
 import { getLocale, getT } from "@/i18n/server";
 import { CHALLENGES_HU } from "@/lib/taxonomy/hu";
+import { localizedSubskills } from "@/lib/taxonomy/subskills";
+import { getDrillPractice } from "./practice";
 
 export function toStatus(r: MasteryResult): SkillStatus {
   return {
@@ -70,7 +72,7 @@ export async function getTreeData(user: { id: string; displayName: string; enrol
     }
   }
 
-  const [links, challengeSkills, goals, xpAgg, recentlyImproved] = await Promise.all([
+  const [links, challengeSkills, goals, xpAgg, recentlyImproved, practice] = await Promise.all([
     db.skillEvidenceLink.findMany({
       where: { project: { ownerId: user.id, deletedAt: null } },
       include: { project: { select: { id: true, title: true } } },
@@ -80,6 +82,7 @@ export async function getTreeData(user: { id: string; displayName: string; enrol
     db.learningGoalSkill.findMany({ where: { goal: { userId: user.id, status: "ACTIVE" } }, select: { skillId: true } }),
     db.experienceEvent.aggregate({ where: { userId: user.id }, _sum: { awardedXp: true } }),
     recentlyImprovedSkills(user.id),
+    getDrillPractice(user.id, now),
   ]);
 
   const extras: Record<string, SkillExtras> = {};
@@ -99,6 +102,7 @@ export async function getTreeData(user: { id: string; displayName: string; enrol
       levels: s.levels,
       evidenceTypes: s.evidenceTypes,
       exercises: s.exercises,
+      subskills: localizedSubskills(s.id, hu ? "hu" : "en"),
     })),
     edges: taxonomy.edges.filter((e) => taxonomy.skillById[e.from] && taxonomy.skillById[e.to]),
     positions: {
@@ -111,6 +115,7 @@ export async function getTreeData(user: { id: string; displayName: string; enrol
     recentlyImproved,
     goalSkills: [...new Set(goals.map((g) => g.skillId))],
     extras,
+    practice,
     displayName: user.displayName,
     tierName: t(practiceTier(xpAgg._sum.awardedXp ?? 0).name),
   };

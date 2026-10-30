@@ -1,4 +1,7 @@
 import type { MasteryResult } from "@/lib/assessment/engine";
+import type { LocalizedSubSkill } from "@/lib/taxonomy/subskills";
+
+export type { LocalizedSubSkill };
 
 export interface TreeCategory {
   id: string;
@@ -18,6 +21,7 @@ export interface TreeSkill {
   levels: string[];
   evidenceTypes: string[];
   exercises: string[];
+  subskills: LocalizedSubSkill[];
 }
 
 export interface TreeEdge {
@@ -54,6 +58,9 @@ export interface SkillExtras {
   challenges: { id: string; title: string }[];
 }
 
+/** How often each drill was logged; `today` stops double-logging on the same day. */
+export type DrillPractice = Record<string, { count: number; today: boolean }>;
+
 export interface TreeData {
   categories: TreeCategory[];
   skills: TreeSkill[];
@@ -68,6 +75,7 @@ export interface TreeData {
   recentlyImproved: string[];
   goalSkills: string[];
   extras: Record<string, SkillExtras>;
+  practice: DrillPractice;
   displayName: string;
   tierName: string;
 }
