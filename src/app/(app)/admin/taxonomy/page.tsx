@@ -30,7 +30,7 @@ export default async function TaxonomyAdmin() {
         title={t("Skill taxonomy")}
         description={t("Edit skill definitions and rubrics through versioned, audited changes. Historical assessments always keep the rubric they were made against.")}
       />
-      <div className="grid gap-6 lg:grid-cols-12">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         <div className="space-y-6 lg:col-span-8">
           {categories.map((c) => (
             <Card key={c.id} className="p-5">

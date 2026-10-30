@@ -43,6 +43,7 @@ test("a new student can complete the core journey", async ({ page }) => {
   const panel = page.getByRole("complementary", { name: "Blocking details" });
   await expect(panel).toBeVisible();
   await expect(panel).toContainText("Not yet assessed");
+  await panel.getByRole("button", { name: "Rubric" }).click();
   await expect(panel).toContainText("I can coordinate actor movement with camera composition");
 
   // 5. Create a project

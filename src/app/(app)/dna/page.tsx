@@ -54,15 +54,15 @@ export default async function DnaPage({ searchParams }: { searchParams: Promise<
         title={t("Director DNA")}
         description={t("The current shape of your documented development across eight areas of directing. There's no ideal shape — great directors look very different from one another.")}
       />
-      <div className="grid gap-6 lg:grid-cols-12">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         <Card className="lg:col-span-7">
           <CardHeader
             title={t("Development profile")}
             action={
               pastSems.length > 0 && (
-                <form className="flex items-center gap-2 text-xs text-muted">
+                <form className="flex flex-wrap items-center gap-2 text-xs text-muted min-w-0">
                   <label htmlFor="compare">{t("Compare with")}</label>
-                  <select id="compare" name="compare" defaultValue={compareSem} className="rounded-md border border-line bg-ink/60 px-2 py-1 text-xs">
+                  <select id="compare" name="compare" defaultValue={compareSem} className="max-w-[14rem] rounded-md border border-line bg-ink/60 px-2 py-1 text-xs">
                     {pastSems.map((s) => (
                       <option key={s} value={s}>
                         {t("end of {sem}", { sem: semesterLabel(user.enrollmentYear, s, t) })}

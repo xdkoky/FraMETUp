@@ -169,7 +169,7 @@ export default async function ProjectPage({
         </div>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-12">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         <div className="space-y-6 lg:col-span-7">
           <Card className="p-5">
             <p className="text-[15px] leading-relaxed text-text/90 whitespace-pre-line">{project.description}</p>

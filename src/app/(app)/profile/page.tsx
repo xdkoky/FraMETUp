@@ -61,7 +61,7 @@ export default async function ProfilePage() {
           </Card>
         ))}
       </div>
-      <div className="grid gap-6 lg:grid-cols-12">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         <Card className="lg:col-span-5">
           <CardHeader eyebrow={t("Visible only per your privacy settings")} title={t("About you")} />
           <div className="p-5">

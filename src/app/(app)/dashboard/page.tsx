@@ -108,7 +108,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         </div>
       </header>
 
-      <div className="grid gap-4 lg:grid-cols-12">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
         {/* Development overview */}
         <Card className="lg:col-span-7">
           <CardHeader eyebrow={t("Demonstrated ability")} title={t("Development overview")} action={<Link href="/skills" className="text-xs text-accent hover:underline">{t("Open skill tree →")}</Link>} />
