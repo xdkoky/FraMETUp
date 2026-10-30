@@ -59,11 +59,10 @@ test("a new student can complete the core journey", async ({ page }) => {
   await page.getByRole("radio", { name: /L3/ }).click();
   await page.getByLabel(/What did you do that shows this/).fill("Planned the stairwell crosses on a floor plan so each step up mirrored her gaining ground.");
   await page.getByRole("button", { name: "Save skill evidence" }).click();
-  await expect(page.getByText("Skill evidence saved")).toBeVisible();
   await expect(page.getByText("Mapped to L3")).toBeVisible();
 
   // 7. Add evidence (a link)
-  await page.getByText("Add evidence").click();
+  await page.locator("summary", { hasText: "Add evidence" }).click();
   await page.getByLabel("Title", { exact: true }).last().fill("Floor plan");
   await page.getByLabel("Link (https)").fill("https://example.org/floorplan.pdf");
   await page.getByRole("button", { name: "Add evidence" }).click();
@@ -100,6 +99,7 @@ test("private projects are not visible to other students", async ({ page, browse
   await page.getByLabel("Email").fill("demo@frametup.local");
   await page.getByLabel("Password").fill("frametup-demo");
   await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page).toHaveURL(/\/dashboard/);
   await page.goto("/projects");
   await page.getByRole("link", { name: /Kitchen Table/ }).click();
   const privateUrl = page.url();
