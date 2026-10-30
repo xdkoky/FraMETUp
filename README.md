@@ -2,6 +2,12 @@
 
 Evidence-based filmmaking skill development platform for METU film directing students. It is an independent tool, not an official university system.
 
+## Try it in your browser (no install)
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/xdkoky/FraMETUp?ref=claude/director-os-platform-pkinre)
+
+The first start takes about 3–5 minutes: it installs packages, sets up the database and seeds demo data. The app then opens on port 3000.
+
 ## Run locally
 
 You need Node 20+ and PostgreSQL 14+.
