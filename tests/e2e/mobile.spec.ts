@@ -2,8 +2,8 @@ import { expect, test } from "@playwright/test";
 
 test("the app is usable on a phone", async ({ page }) => {
   await page.goto("/login");
-  await page.getByLabel("Email").fill("demo@director-os.local");
-  await page.getByLabel("Password").fill("director-demo");
+  await page.getByLabel("Email").fill("demo@frametup.local");
+  await page.getByLabel("Password").fill("frametup-demo");
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page).toHaveURL(/\/dashboard/);
   await page.getByRole("button", { name: "Open navigation" }).click();

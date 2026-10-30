@@ -4,10 +4,10 @@
  *   npm run db:seed
  *
  * Demo accounts (all data is fictional):
- *   demo@director-os.local    / director-demo   — a third-semester directing student
- *   bence@director-os.local   / director-demo   — demo peer (cinematographer)
- *   dora@director-os.local    / director-demo   — demo peer (actor)
- *   admin@director-os.local   / director-admin  — demo administrator (only when SEED_DEMO_ADMIN=true;
+ *   demo@frametup.local    / frametup-demo   — a third-semester directing student
+ *   bence@frametup.local   / frametup-demo   — demo peer (cinematographer)
+ *   dora@frametup.local    / frametup-demo   — demo peer (actor)
+ *   admin@frametup.local   / frametup-admin  — demo administrator (only when SEED_DEMO_ADMIN=true;
  *                                                  never enable on a public deployment)
  */
 import { PrismaClient, type Prisma } from "@prisma/client";
@@ -117,7 +117,9 @@ async function xp(userId: string, kind: XpKind, sourceId: string, when: Date, qu
 }
 
 async function seedDemo() {
-  const demoEmails = ["demo@director-os.local", "bence@director-os.local", "dora@director-os.local", "admin@director-os.local"];
+  const demoEmails = ["demo@frametup.local", "bence@frametup.local", "dora@frametup.local", "admin@frametup.local"];
+  // Accounts from before the FraMETUp rename are cleaned up too.
+  demoEmails.push(...demoEmails.map((e) => e.replace("@frametup.local", "@director-os.local")));
   const old = await db.user.findMany({ where: { email: { in: demoEmails } }, select: { id: true } });
   if (old.length) {
     const ids = old.map((u) => u.id);
@@ -137,15 +139,15 @@ async function seedDemo() {
     (await db.cohort.findFirst({ where: { name: "Film Directing BA · 2025 intake" } })) ??
     (await db.cohort.create({ data: { name: "Film Directing BA · 2025 intake", startYear: ENROLL, authorized: false } }));
 
-  const demo = await createUser("demo@director-os.local", "director-demo", "Noémi Kardos (demo)", {
+  const demo = await createUser("demo@frametup.local", "frametup-demo", "Noémi Kardos (demo)", {
     interests: ["actor", "visual", "vision"],
     experience: "Made music videos for friends' bands in secondary school; one short documentary about my grandmother's village.",
     bio: "Demonstration profile. Interested in quiet, observational drama and long takes.",
   });
-  const bence = await createUser("bence@director-os.local", "director-demo", "Bence Halász (demo)", { interests: ["technical", "visual"] });
-  const dora = await createUser("dora@director-os.local", "director-demo", "Dóra Mészáros (demo)", { interests: ["actor"] });
+  const bence = await createUser("bence@frametup.local", "frametup-demo", "Bence Halász (demo)", { interests: ["technical", "visual"] });
+  const dora = await createUser("dora@frametup.local", "frametup-demo", "Dóra Mészáros (demo)", { interests: ["actor"] });
   if (process.env.SEED_DEMO_ADMIN === "true") {
-    const admin = await createUser("admin@director-os.local", "director-admin", "Platform admin (demo)", { academicYear: null });
+    const admin = await createUser("admin@frametup.local", "frametup-admin", "Platform admin (demo)", { academicYear: null });
     const adminRole = await db.role.findUniqueOrThrow({ where: { key: "ADMIN" } });
     await db.userRole.create({ data: { userId: admin.id, roleId: adminRole.id, verified: true } });
   }
@@ -546,7 +548,7 @@ async function seedDemo() {
   await recomputeMastery(demo.id);
   await recomputeMastery(bence.id);
 
-  console.log(`✓ demo accounts: demo@director-os.local / director-demo (plus bence@, dora@${process.env.SEED_DEMO_ADMIN === "true" ? ", admin@" : ""})`);
+  console.log(`✓ demo accounts: demo@frametup.local / frametup-demo (plus bence@, dora@${process.env.SEED_DEMO_ADMIN === "true" ? ", admin@" : ""})`);
 }
 
 async function taxonomyUpToDate() {
@@ -564,7 +566,7 @@ async function main() {
   if (process.env.SEED_FORCE === "true" || !(await taxonomyUpToDate())) await seedTaxonomy();
   else console.log(`✓ taxonomy v${TAXONOMY_VERSION} already present`);
 
-  const demoExists = await db.user.findUnique({ where: { email: "demo@director-os.local" } });
+  const demoExists = await db.user.findUnique({ where: { email: "demo@frametup.local" } });
   if (process.env.SEED_DEMO !== "false" && (!demoExists || process.env.SEED_DEMO_RESET === "true" || process.env.SEED_FORCE === "true")) await seedDemo();
   else if (demoExists) console.log("✓ demo accounts already present (set SEED_DEMO_RESET=true to reset them)");
   if (process.env.SEED_ADMIN_EMAIL) {

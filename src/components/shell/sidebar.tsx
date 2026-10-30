@@ -7,19 +7,18 @@ import { LogOut, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { logoutAction } from "@/app/(auth)/actions";
 import { NAV_ITEMS, SECONDARY_NAV } from "./nav-items";
+import { Wordmark } from "@/components/brand";
 
 function Logo() {
   return (
-    <Link href="/dashboard" className="flex items-center gap-2.5 group" aria-label="DIRECTOR OS home">
+    <Link href="/dashboard" className="flex items-center gap-2.5 group" aria-label="FraMETUp home">
       <svg viewBox="0 0 32 32" className="size-7" aria-hidden>
         <rect x="2" y="9" width="28" height="20" rx="3" fill="#151923" stroke="#2A3142" />
         <path d="M3 9 L7 3 H13 L9 9 Z M13 9 L17 3 H23 L19 9 Z" fill="#E8B04B" />
         <circle cx="16" cy="19" r="4.5" fill="none" stroke="#6E9BFF" strokeWidth="1.6" />
         <circle cx="16" cy="19" r="1.4" fill="#6E9BFF" />
       </svg>
-      <span className="font-mono text-[13px] tracking-[0.22em] text-text">
-        DIRECTOR<span className="text-accent">OS</span>
-      </span>
+      <Wordmark />
     </Link>
   );
 }

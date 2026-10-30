@@ -230,7 +230,7 @@ export function CollaboratorForm({ action }: { action: Action }) {
         </div>
       </div>
       <div>
-        <Label htmlFor="c-email">DIRECTOR OS email (optional)</Label>
+        <Label htmlFor="c-email">FraMETUp email (optional)</Label>
         <Input id="c-email" name="email" type="email" placeholder="Links their account so you can request their feedback" />
       </div>
       <SubmitButton size="sm" variant="secondary" pendingText="Adding…">

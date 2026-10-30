@@ -1,4 +1,4 @@
-# DIRECTOR OS
+# FraMETUp
 
 Evidence-based filmmaking skill development platform for METU film directing students. It is an independent tool, not an official university system.
 
@@ -20,8 +20,8 @@ npm run db:seed               # taxonomy + clearly labelled demo accounts
 npm run dev                   # http://localhost:3000
 ```
 
-Demo login: `demo@director-os.local` / `director-demo` (all demo data is fictional).
-Admin demo: `admin@director-os.local` / `director-admin`.
+Demo login: `demo@frametup.local` / `frametup-demo` (all demo data is fictional).
+Admin demo: `admin@frametup.local` / `frametup-admin`.
 
 AI is optional. Without `ANTHROPIC_API_KEY`, a local keyword heuristic is used and no data leaves the server.
 

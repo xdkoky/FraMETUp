@@ -1,12 +1,13 @@
 import Link from "next/link";
+import { Wordmark } from "@/components/brand";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-dvh grid lg:grid-cols-[1.1fr_1fr]">
       <section className="relative hidden lg:flex flex-col justify-between p-12 overflow-hidden border-r border-line-soft">
         <AuthArt />
-        <Link href="/" className="relative font-mono text-[13px] tracking-[0.22em]">
-          DIRECTOR<span className="text-accent">OS</span>
+        <Link href="/" className="relative">
+          <Wordmark className="text-[15px]" />
         </Link>
         <div className="relative max-w-md">
           <div className="slate-label mb-4">Scene 01 · Take 01</div>

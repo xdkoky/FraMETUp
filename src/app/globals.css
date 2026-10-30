@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* ── DIRECTOR OS design tokens ─────────────────────────────────────────────
+/* ── FraMETUp design tokens ─────────────────────────────────────────────
    Dark-first. Muted electric blue for interaction, warm amber for progress
    and highlights. Category colours are used sparingly as accents. */
 @theme {

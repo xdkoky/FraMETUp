@@ -1,5 +1,5 @@
 /**
- * DIRECTOR OS — mastery estimation engine.
+ * FraMETUp — mastery estimation engine.
  *
  * Pure, deterministic, framework-free. Given every piece of evidence about one skill
  * for one student, it returns an estimate, a separate confidence value, and a plain-

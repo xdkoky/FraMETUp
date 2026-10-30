@@ -91,8 +91,8 @@ test("a new student can complete the core journey", async ({ page }) => {
 test("private projects are not visible to other students", async ({ page, browser }) => {
   // The demo student's projects are private by default.
   await page.goto("/login");
-  await page.getByLabel("Email").fill("demo@director-os.local");
-  await page.getByLabel("Password").fill("director-demo");
+  await page.getByLabel("Email").fill("demo@frametup.local");
+  await page.getByLabel("Password").fill("frametup-demo");
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.goto("/projects");
   await page.getByRole("link", { name: /Kitchen Table/ }).click();

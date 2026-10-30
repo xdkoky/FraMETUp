@@ -1,10 +1,10 @@
 {
-  "name": "DIRECTOR OS",
+  "name": "FraMETUp",
   "dockerComposeFile": "docker-compose.yml",
   "service": "app",
   "workspaceFolder": "/workspaces/FraMETUp",
   "forwardPorts": [3000],
-  "portsAttributes": { "3000": { "label": "DIRECTOR OS", "onAutoForward": "openBrowser" } },
+  "portsAttributes": { "3000": { "label": "FraMETUp", "onAutoForward": "openBrowser" } },
   "postCreateCommand": "cp -n .env.example .env && sed -i 's#localhost:5432#db:5432#' .env && npm install && npx prisma migrate deploy && npm run db:seed",
   "postAttachCommand": "npm run dev",
   "customizations": { "codespaces": { "openFiles": ["README.md"] } }

@@ -8,7 +8,7 @@ const display = Instrument_Serif({ subsets: ["latin", "latin-ext"], weight: "400
 const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
 
 export const metadata: Metadata = {
-  title: { default: "DIRECTOR OS", template: "%s · DIRECTOR OS" },
+  title: { default: "FraMETUp", template: "%s · FraMETUp" },
   description: "An evidence-based map of your development as a film director.",
 };
 

@@ -24,7 +24,7 @@ export async function exportUserData(userId: string) {
   const received = reviewsReceived.map((r) => (r.anonymousToSubject ? { ...r, reviewerId: "anonymous" } : r));
   return {
     exportedAt: new Date().toISOString(),
-    format: "director-os-export-v1",
+    format: "frametup-export-v1",
     note: "Uploaded files are listed by metadata; download them individually from each project.",
     user,
     projects,

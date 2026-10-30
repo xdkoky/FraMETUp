@@ -358,7 +358,7 @@ export default async function ProjectPage({
                         <div className="truncate">{c.name}</div>
                         <div className="text-xs text-faint">{c.role}</div>
                       </div>
-                      {c.userId && <Badge tone="accent">On DIRECTOR OS</Badge>}
+                      {c.userId && <Badge tone="accent">On FraMETUp</Badge>}
                       {isOwner && <ConfirmButton action={removeCollaborator.bind(null, project.id, c.id)} label="" confirmText={`Remove ${c.name}?`} />}
                     </li>
                   ))}

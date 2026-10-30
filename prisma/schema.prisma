@@ -1,4 +1,4 @@
-// DIRECTOR OS — relational schema
+// FraMETUp — relational schema
 //
 // Design notes
 // - Assessment records (self, peer, instructor, AI) are append-only. A newer record

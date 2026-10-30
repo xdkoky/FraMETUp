@@ -192,7 +192,7 @@ export async function addCollaborator(projectId: string, _: ActionState, formDat
   }
   await db.projectCollaborator.create({ data: { projectId, name, role, userId } });
   revalidatePath(`/projects/${projectId}`);
-  return { ok: userId ? `${name} was added and linked to their DIRECTOR OS account.` : `${name} was added.` };
+  return { ok: userId ? `${name} was added and linked to their FraMETUp account.` : `${name} was added.` };
 }
 
 export async function removeCollaborator(projectId: string, collaboratorId: string) {

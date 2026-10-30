@@ -16,7 +16,7 @@ import { rateLimit } from "@/lib/rate-limit";
 export type FeedbackState = { error?: string; fieldErrors?: Record<string, string[] | undefined> } | null;
 
 const RequestSchema = z.object({
-  reviewerEmail: z.string().trim().toLowerCase().email("Enter the reviewer's DIRECTOR OS email."),
+  reviewerEmail: z.string().trim().toLowerCase().email("Enter the reviewer's FraMETUp email."),
   projectId: z.string().optional().transform((v) => v || null),
   reviewerRelation: z.string().trim().min(2, "Describe their role, e.g. Cinematographer.").max(80),
   message: z.string().trim().max(1000).optional().transform((v) => v || null),
@@ -39,7 +39,7 @@ export async function requestFeedback(_: FeedbackState, formData: FormData): Pro
   // Same message whether the account doesn't exist or has opted out — no account enumeration.
   const reviewer = await db.user.findFirst({ where: { email: d.reviewerEmail, deletedAt: null }, include: { privacy: true } });
   if (!reviewer || reviewer.privacy?.allowReviewRequests === false) {
-    return { fieldErrors: { reviewerEmail: ["We couldn't send a request to that address. Check it's their DIRECTOR OS email."] } };
+    return { fieldErrors: { reviewerEmail: ["We couldn't send a request to that address. Check it's their FraMETUp email."] } };
   }
   if (reviewer.id === user.id) return { fieldErrors: { reviewerEmail: ["Use self-assessment for your own view."] } };
   if (d.projectId && !(await db.project.findFirst({ where: { id: d.projectId, ownerId: user.id, deletedAt: null } }))) {

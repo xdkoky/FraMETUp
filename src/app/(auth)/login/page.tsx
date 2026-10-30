@@ -22,7 +22,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       </p>
       <div className="mt-8 rounded-lg border border-amber/20 bg-amber-soft p-3 text-xs text-amber leading-relaxed">
         <strong className="font-semibold">Exploring?</strong> Sign in as the demonstration student
-        <code className="mx-1 font-mono">demo@director-os.local</code> / <code className="font-mono">director-demo</code>. All demo data is fictional.
+        <code className="mx-1 font-mono">demo@frametup.local</code> / <code className="font-mono">frametup-demo</code>. All demo data is fictional.
       </div>
     </>
   );

@@ -1,8 +1,8 @@
 {
-  "name": "director-os",
+  "name": "frametup",
   "version": "0.1.0",
   "private": true,
-  "description": "DIRECTOR OS — evidence-based filmmaking skill development platform for METU directing students",
+  "description": "FraMETUp — evidence-based filmmaking skill development platform for METU directing students",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
