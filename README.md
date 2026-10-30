@@ -25,6 +25,19 @@ Admin demo: `admin@director-os.local` / `director-admin`.
 
 AI is optional. Without `ANTHROPIC_API_KEY`, a local keyword heuristic is used and no data leaves the server.
 
+## Deploy (Vercel + Supabase, free tiers)
+
+1. **Supabase:** create a new project. In **Connect**, copy:
+   - the *Transaction pooler* URI (port 6543): add `?pgbouncer=true&connection_limit=1` and use it as `DATABASE_URL`
+   - the *Session pooler* URI (port 5432): use it as `DIRECT_URL`
+
+   In **Project Settings → API**, copy the project URL (`SUPABASE_URL`) and the `service_role` key (`SUPABASE_SERVICE_ROLE_KEY`). Keep that key secret.
+2. **Vercel:** import this GitHub repo, choose the branch, and add the four variables above as Environment Variables. Don't set `SEED_DEMO_ADMIN` on a public site.
+3. Deploy. The `vercel-build` script runs database migrations, seeds the taxonomy and demo student, and builds the app. Uploads go to a private `evidence` bucket that is created automatically.
+4. To make yourself admin: register on the live site, set `SEED_ADMIN_EMAIL` to your email in Vercel, and redeploy.
+
+Notes: Supabase free projects pause after 7 days without activity (restore them from the dashboard). Rate limiting is per server instance, so replace it with a shared store before wide use.
+
 ## Checks
 
 ```bash

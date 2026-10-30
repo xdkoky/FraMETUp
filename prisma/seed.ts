@@ -7,7 +7,8 @@
  *   demo@director-os.local    / director-demo   — a third-semester directing student
  *   bence@director-os.local   / director-demo   — demo peer (cinematographer)
  *   dora@director-os.local    / director-demo   — demo peer (actor)
- *   admin@director-os.local   / director-admin  — demo administrator
+ *   admin@director-os.local   / director-admin  — demo administrator (only when SEED_DEMO_ADMIN=true;
+ *                                                  never enable on a public deployment)
  */
 import { PrismaClient, type Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
@@ -143,9 +144,11 @@ async function seedDemo() {
   });
   const bence = await createUser("bence@director-os.local", "director-demo", "Bence Halász (demo)", { interests: ["technical", "visual"] });
   const dora = await createUser("dora@director-os.local", "director-demo", "Dóra Mészáros (demo)", { interests: ["actor"] });
-  const admin = await createUser("admin@director-os.local", "director-admin", "Platform admin (demo)", { academicYear: null });
-  const adminRole = await db.role.findUniqueOrThrow({ where: { key: "ADMIN" } });
-  await db.userRole.create({ data: { userId: admin.id, roleId: adminRole.id, verified: true } });
+  if (process.env.SEED_DEMO_ADMIN === "true") {
+    const admin = await createUser("admin@director-os.local", "director-admin", "Platform admin (demo)", { academicYear: null });
+    const adminRole = await db.role.findUniqueOrThrow({ where: { key: "ADMIN" } });
+    await db.userRole.create({ data: { userId: admin.id, roleId: adminRole.id, verified: true } });
+  }
   for (const u of [demo, bence, dora]) await db.cohortMembership.create({ data: { cohortId: cohort.id, userId: u.id } });
 
   // ── Projects ──
@@ -543,7 +546,7 @@ async function seedDemo() {
   await recomputeMastery(demo.id);
   await recomputeMastery(bence.id);
 
-  console.log("✓ demo accounts: demo@director-os.local / director-demo (plus bence@, dora@, admin@)");
+  console.log(`✓ demo accounts: demo@director-os.local / director-demo (plus bence@, dora@${process.env.SEED_DEMO_ADMIN === "true" ? ", admin@" : ""})`);
 }
 
 async function main() {

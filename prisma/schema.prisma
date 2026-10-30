@@ -16,7 +16,8 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url       = env("DATABASE_URL") // pooled connection (Supabase pooler on Vercel)
+  directUrl = env("DIRECT_URL")   // direct connection, used for migrations
 }
 
 // ───────────────────────────── Identity & access ─────────────────────────────

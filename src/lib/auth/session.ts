@@ -20,7 +20,7 @@ export async function createSession(userId: string) {
   jar.set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.SECURE_COOKIES === "true",
+    secure: process.env.SECURE_COOKIES === "true" || Boolean(process.env.VERCEL),
     path: "/",
     expires: expiresAt,
   });
