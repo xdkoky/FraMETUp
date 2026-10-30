@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { FieldError, FormMessage, Hint, Input, Label, Select, SubmitButton, Textarea } from "@/components/ui/form";
 import { cn, PROJECT_STATUS_LABEL } from "@/lib/utils";
 import type { ActionState } from "../actions";
+import { useT } from "@/i18n/client";
 
 type Action = (state: ActionState, formData: FormData) => Promise<ActionState>;
 
@@ -28,6 +29,7 @@ export function SkillLinkForm({
   linkedIds: string[];
   initialSkillId?: string;
 }) {
+  const t = useT();
   const [state, formAction] = useActionState(action, null);
   const [skillId, setSkillId] = useState(initialSkillId ?? "");
   const [query, setQuery] = useState("");
@@ -47,10 +49,10 @@ export function SkillLinkForm({
     <form action={formAction} className="space-y-4" id="link-skill">
       <FormMessage state={state} />
       <div>
-        <Label htmlFor="skill-search">Skill</Label>
-        <Input id="skill-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Filter skills…" className="mb-2" />
-        <Select name="skillId" value={skillId} onChange={(e) => setSkillId(e.target.value)} required aria-label="Choose skill">
-          <option value="">Choose a skill…</option>
+        <Label htmlFor="skill-search">{t("Skill")}</Label>
+        <Input id="skill-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("Filter skills…")} className="mb-2" />
+        <Select name="skillId" value={skillId} onChange={(e) => setSkillId(e.target.value)} required aria-label={t("Choose skill")}>
+          <option value="">{t("Choose a skill…")}</option>
           {groups.map(([cat, list]) => (
             <optgroup key={cat} label={cat}>
               {list.map((s) => (
@@ -65,36 +67,36 @@ export function SkillLinkForm({
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
         <div>
-          <Label htmlFor="relevance">Relevance</Label>
+          <Label htmlFor="relevance">{t("Relevance")}</Label>
           <Select id="relevance" name="relevance" defaultValue="PRIMARY">
-            <option value="PRIMARY">Primary focus</option>
-            <option value="SECONDARY">Secondary</option>
-            <option value="INCIDENTAL">Incidental</option>
+            <option value="PRIMARY">{t("Primary focus")}</option>
+            <option value="SECONDARY">{t("Secondary")}</option>
+            <option value="INCIDENTAL">{t("Incidental")}</option>
           </Select>
         </div>
         <div>
-          <Label htmlFor="difficulty">Difficulty</Label>
+          <Label htmlFor="difficulty">{t("Difficulty")}</Label>
           <Select id="difficulty" name="difficulty" defaultValue="2">
-            <option value="1">Routine</option>
-            <option value="2">Stretching</option>
-            <option value="3">Demanding</option>
+            <option value="1">{t("Routine")}</option>
+            <option value="2">{t("Stretching")}</option>
+            <option value="3">{t("Demanding")}</option>
           </Select>
         </div>
         <div>
-          <Label htmlFor="independence">Independence</Label>
+          <Label htmlFor="independence">{t("Independence")}</Label>
           <Select id="independence" name="independence" defaultValue="INDEPENDENT">
-            <option value="INDEPENDENT">Independently</option>
-            <option value="WITH_SUPPORT">With some support</option>
-            <option value="WITH_GUIDANCE">With guidance</option>
+            <option value="INDEPENDENT">{t("Independently")}</option>
+            <option value="WITH_SUPPORT">{t("With some support")}</option>
+            <option value="WITH_GUIDANCE">{t("With guidance")}</option>
           </Select>
         </div>
       </div>
       <fieldset>
-        <legend className="text-sm font-medium mb-1.5">Map against the rubric (optional)</legend>
-        <Hint className="mt-0 mb-2">Which descriptor best matches what you actually did in <em>this</em> project? Leave blank to log it as practice only.</Hint>
+        <legend className="text-sm font-medium mb-1.5">{t("Map against the rubric (optional)")}</legend>
+        <Hint className="mt-0 mb-2">{t("Which descriptor best matches what you actually did in")}{" "}<em>{t("this")}</em>{" "}{t("project? Leave blank to log it as practice only.")}</Hint>
         <input type="hidden" name="demonstratedLevel" value={level} />
         {skill ? (
-          <div className="space-y-1.5" role="radiogroup" aria-label="Demonstrated level">
+          <div className="space-y-1.5" role="radiogroup" aria-label={t("Demonstrated level")}>
             <button
               type="button"
               role="radio"
@@ -102,7 +104,7 @@ export function SkillLinkForm({
               onClick={() => setLevel("")}
               className={cn("w-full rounded-lg border px-3 py-2 text-left text-[13px]", level === "" ? "border-accent bg-accent-soft" : "border-line-soft text-muted hover:border-line")}
             >
-              Practice only — not mapped
+              {t("Practice only — not mapped")}
             </button>
             {skill.levels.map((l, i) => (
               <button
@@ -122,28 +124,29 @@ export function SkillLinkForm({
             ))}
           </div>
         ) : (
-          <p className="text-xs text-faint">Choose a skill to see its rubric.</p>
+          <p className="text-xs text-faint">{t("Choose a skill to see its rubric.")}</p>
         )}
       </fieldset>
       <div>
-        <Label htmlFor="justification">What did you do that shows this? {Number(level) >= 3 && <span className="text-amber">(required)</span>}</Label>
-        <Textarea id="justification" name="justification" rows={2} maxLength={2000} placeholder="Point to concrete moments, decisions or documents." />
+        <Label htmlFor="justification">{t("What did you do that shows this?")}{" "}{Number(level) >= 3 && <span className="text-amber">{t("(required)")}</span>}</Label>
+        <Textarea id="justification" name="justification" rows={2} maxLength={2000} placeholder={t("Point to concrete moments, decisions or documents.")} />
         <FieldError errors={state?.fieldErrors?.justification} />
       </div>
-      <SubmitButton size="sm" pendingText="Saving…">
-        <Link2 className="size-4" aria-hidden /> Save skill evidence
+      <SubmitButton size="sm" pendingText={t("Saving…")}>
+        <Link2 className="size-4" aria-hidden />{" "}{t("Save skill evidence")}
       </SubmitButton>
     </form>
   );
 }
 
 export function EvidenceForm({ action, maxMb }: { action: Action; maxMb: number }) {
+  const t = useT();
   const [state, formAction] = useActionState(action, null);
   const [mode, setMode] = useState<"link" | "file" | "note">("link");
   return (
     <form action={formAction} className="space-y-3" encType="multipart/form-data">
       <FormMessage state={state} />
-      <div className="flex gap-1 rounded-lg bg-ink/50 p-1 w-fit" role="tablist" aria-label="Evidence type">
+      <div className="flex gap-1 rounded-lg bg-ink/50 p-1 w-fit" role="tablist" aria-label={t("Evidence type")}>
         {(["link", "file", "note"] as const).map((m) => (
           <button
             key={m}
@@ -159,92 +162,94 @@ export function EvidenceForm({ action, maxMb }: { action: Action; maxMb: number 
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <Label htmlFor="ev-kind">Kind</Label>
+          <Label htmlFor="ev-kind">{t("Kind")}</Label>
           <Select id="ev-kind" name="kind" key={mode} defaultValue={mode === "link" ? "VIDEO_LINK" : mode === "note" ? "NOTE" : "SHOT_LIST"}>
             {mode === "link" && (
               <>
-                <option value="VIDEO_LINK">Video link</option>
-                <option value="DOCUMENT_LINK">Document link</option>
+                <option value="VIDEO_LINK">{t("Video link")}</option>
+                <option value="DOCUMENT_LINK">{t("Document link")}</option>
               </>
             )}
-            <option value="SCRIPT">Script</option>
-            <option value="STORYBOARD">Storyboard</option>
-            <option value="SHOT_LIST">Shot list / floor plan</option>
-            <option value="DIRECTORS_NOTES">Director&apos;s notes</option>
-            <option value="NOTE">Note</option>
+            <option value="SCRIPT">{t("Script")}</option>
+            <option value="STORYBOARD">{t("Storyboard")}</option>
+            <option value="SHOT_LIST">{t("Shot list / floor plan")}</option>
+            <option value="DIRECTORS_NOTES">{t("Director's notes")}</option>
+            <option value="NOTE">{t("Note")}</option>
           </Select>
         </div>
         <div>
-          <Label htmlFor="ev-title">Title</Label>
+          <Label htmlFor="ev-title">{t("Title")}</Label>
           <Input id="ev-title" name="title" required maxLength={200} />
           <FieldError errors={state?.fieldErrors?.title} />
         </div>
       </div>
       {mode === "link" && (
         <div>
-          <Label htmlFor="ev-url">Link (https)</Label>
-          <Input id="ev-url" name="url" type="url" placeholder="https://vimeo.com/… (use private links where possible)" />
+          <Label htmlFor="ev-url">{t("Link (https)")}</Label>
+          <Input id="ev-url" name="url" type="url" placeholder={t("https://vimeo.com/… (use private links where possible)")} />
           <FieldError errors={state?.fieldErrors?.url} />
         </div>
       )}
       {mode === "file" && (
         <div>
-          <Label htmlFor="ev-file">File</Label>
+          <Label htmlFor="ev-file">{t("File")}</Label>
           <input id="ev-file" name="file" type="file" accept=".pdf,.png,.jpg,.jpeg,.txt,.md" className="block w-full text-sm text-muted file:mr-3 file:rounded-md file:border-0 file:bg-surface-3 file:px-3 file:py-1.5 file:text-text" />
-          <Hint>PDF, PNG, JPEG, text or Markdown up to {maxMb} MB. For films, add a private link instead of uploading.</Hint>
+          <Hint>{t("PDF, PNG, JPEG, text or Markdown up to")}{" "}{maxMb}{" "}{t("MB. For films, add a private link instead of uploading.")}</Hint>
         </div>
       )}
       <div>
-        <Label htmlFor="ev-desc">{mode === "note" ? "Note" : "Description (optional)"}</Label>
+        <Label htmlFor="ev-desc">{mode === "note" ? t("Note") : t("Description (optional)")}</Label>
         <Textarea id="ev-desc" name="description" rows={2} maxLength={2000} />
       </div>
       {mode !== "note" && (
         <label className="flex items-start gap-2 text-xs text-muted">
           <input type="checkbox" name="rightsConfirmed" className="mt-0.5 accent-[#6E9BFF]" />
-          I have the right to store and share this with the people I choose (actors, crew and music rights included).
+          {t("I have the right to store and share this with the people I choose (actors, crew and music rights included).")}
         </label>
       )}
       <FieldError errors={state?.fieldErrors?.rightsConfirmed} />
-      <SubmitButton size="sm" variant="secondary" pendingText="Adding…">
-        <Paperclip className="size-4" aria-hidden /> Add evidence
+      <SubmitButton size="sm" variant="secondary" pendingText={t("Adding…")}>
+        <Paperclip className="size-4" aria-hidden />{" "}{t("Add evidence")}
       </SubmitButton>
     </form>
   );
 }
 
 export function CollaboratorForm({ action }: { action: Action }) {
+  const t = useT();
   const [state, formAction] = useActionState(action, null);
   return (
     <form action={formAction} className="space-y-3">
       <FormMessage state={state} />
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <Label htmlFor="c-name">Name</Label>
+          <Label htmlFor="c-name">{t("Name")}</Label>
           <Input id="c-name" name="name" required maxLength={100} />
           <FieldError errors={state?.fieldErrors?.name} />
         </div>
         <div>
-          <Label htmlFor="c-role">Role</Label>
-          <Input id="c-role" name="role" required maxLength={80} placeholder="Cinematographer, lead actor…" />
+          <Label htmlFor="c-role">{t("Role")}</Label>
+          <Input id="c-role" name="role" required maxLength={80} placeholder={t("Cinematographer, lead actor…")} />
           <FieldError errors={state?.fieldErrors?.role} />
         </div>
       </div>
       <div>
-        <Label htmlFor="c-email">FraMETUp email (optional)</Label>
-        <Input id="c-email" name="email" type="email" placeholder="Links their account so you can request their feedback" />
+        <Label htmlFor="c-email">{t("FraMETUp email (optional)")}</Label>
+        <Input id="c-email" name="email" type="email" placeholder={t("Links their account so you can request their feedback")} />
       </div>
-      <SubmitButton size="sm" variant="secondary" pendingText="Adding…">
-        <UserPlus className="size-4" aria-hidden /> Add collaborator
+      <SubmitButton size="sm" variant="secondary" pendingText={t("Adding…")}>
+        <UserPlus className="size-4" aria-hidden />{" "}{t("Add collaborator")}
       </SubmitButton>
     </form>
   );
 }
 
 export function StatusSelect({ action, status }: { action: (fd: FormData) => Promise<void>; status: string }) {
+  const t = useT();
   const [pending, start] = useTransition();
   return (
     <Select
-      aria-label="Project status"
+      aria-label={t("Project status")}
       defaultValue={status}
       disabled={pending}
       className="h-9 w-auto text-xs"
@@ -256,7 +261,7 @@ export function StatusSelect({ action, status }: { action: (fd: FormData) => Pro
     >
       {Object.entries(PROJECT_STATUS_LABEL).map(([v, l]) => (
         <option key={v} value={v}>
-          {l}
+          {t(l)}
         </option>
       ))}
     </Select>

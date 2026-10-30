@@ -9,10 +9,15 @@ import { Page } from "@/components/shell/page";
 import { Card, PageHeader } from "@/components/ui/misc";
 import { ReviewForm } from "./review-form";
 import { declineRequest, submitReview } from "../../actions";
+import { getT } from "@/i18n/server";
 
-export const metadata: Metadata = { title: "Give feedback" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Give feedback") };
+}
 
 export default async function ReviewPage({ params }: { params: Promise<{ id: string }> }) {
+  const t = await getT();
   const { id } = await params;
   const user = await requireUser();
   const req = await db.peerReviewRequest.findUnique({
@@ -24,9 +29,9 @@ export default async function ReviewPage({ params }: { params: Promise<{ id: str
   return (
     <Page className="max-w-3xl">
       <PageHeader
-        eyebrow={`Feedback for ${req.requester.profile?.displayName}`}
-        title={req.project ? req.project.title : "General feedback"}
-        description={`You were asked as ${req.reviewerRelation}. Rate only what you actually observed — “Not observed” is always a valid answer and is never counted against them.`}
+        eyebrow={t("Feedback for {name}", { name: req.requester.profile?.displayName ?? "" })}
+        title={req.project ? req.project.title : t("General feedback")}
+        description={t("You were asked as {role}. Rate only what you actually observed — “Not observed” is always a valid answer and is never counted against them.", { role: req.reviewerRelation })}
       />
       {req.message && <blockquote className="mb-6 border-l-2 border-accent pl-4 text-muted italic">“{req.message}”</blockquote>}
       {req.project && (

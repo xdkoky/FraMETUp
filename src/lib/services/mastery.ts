@@ -5,6 +5,7 @@ import {
   ALGORITHM_VERSION,
   computeMastery,
   DEFAULT_CONFIG,
+  type EngineT,
   type MasteryResult,
   type SkillEvidence,
 } from "@/lib/assessment/engine";
@@ -113,7 +114,7 @@ export async function loadEvidence(userId: string, asOf?: Date): Promise<Map<str
 export type MasteryMap = Record<string, MasteryResult>;
 
 /** Computes live results for every skill (unassessed included) without persisting. */
-export async function computeAll(userId: string, asOf?: Date): Promise<MasteryMap> {
+export async function computeAll(userId: string, asOf?: Date, t?: EngineT): Promise<MasteryMap> {
   const [skills, evidence] = await Promise.all([
     db.skill.findMany({ select: { id: true } }),
     loadEvidence(userId, asOf),
@@ -121,7 +122,7 @@ export async function computeAll(userId: string, asOf?: Date): Promise<MasteryMa
   const now = asOf ?? new Date();
   const out: MasteryMap = {};
   for (const s of skills) {
-    out[s.id] = computeMastery(evidence.get(s.id) ?? { self: [], peer: [], project: [], ai: [] }, now, DEFAULT_CONFIG);
+    out[s.id] = computeMastery(evidence.get(s.id) ?? { self: [], peer: [], project: [], ai: [] }, now, DEFAULT_CONFIG, t);
   }
   return out;
 }

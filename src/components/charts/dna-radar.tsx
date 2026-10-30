@@ -1,6 +1,7 @@
 "use client";
 
 import { PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart, ResponsiveContainer, Tooltip, Legend } from "recharts";
+import { useT } from "@/i18n/client";
 
 export interface DnaPoint {
   category: string;
@@ -11,14 +12,15 @@ export interface DnaPoint {
 }
 
 function TooltipBody({ active, payload }: { active?: boolean; payload?: Array<{ payload: DnaPoint }> }) {
+  const t = useT();
   if (!active || !payload?.length) return null;
   const p = payload[0].payload;
   return (
     <div className="rounded-lg border border-line bg-surface px-3 py-2 text-xs shadow-xl">
       <div className="font-medium text-text">{p.category}</div>
-      <div className="mt-1 text-muted">{p.current === null ? "No assessed skills yet" : `Evidence-weighted estimate: ${Math.round(p.current)}/100`}</div>
-      {p.compare !== undefined && <div className="text-amber">Earlier: {p.compare === null ? "no evidence" : Math.round(p.compare)}</div>}
-      <div className="text-faint">{Math.round(p.coverage * 100)}% of skills have evidence</div>
+      <div className="mt-1 text-muted">{p.current === null ? t("No assessed skills yet") : t("Evidence-weighted estimate: {n}/100", { n: Math.round(p.current) })}</div>
+      {p.compare !== undefined && <div className="text-amber">{t("Earlier:")}{" "}{p.compare === null ? t("no evidence") : Math.round(p.compare)}</div>}
+      <div className="text-faint">{Math.round(p.coverage * 100)}{t("% of skills have evidence")}</div>
     </div>
   );
 }

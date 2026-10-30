@@ -3,8 +3,12 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth/session";
 import { getTaxonomy } from "@/lib/services/taxonomy";
 import { OnboardingFlow } from "./onboarding-flow";
+import { getT } from "@/i18n/server";
 
-export const metadata: Metadata = { title: "Welcome" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Welcome") };
+}
 
 export default async function OnboardingPage() {
   const user = await requireUser({ allowUnonboarded: true });

@@ -13,6 +13,10 @@ export interface ReflectionAnalysisInput {
   projectType?: string;
   linkedSkillIds: string[];
   catalog: CatalogSkill[];
+  /** UI language: the provider answers in it. */
+  language?: "hu" | "en";
+  /** Translator for fixed text produced by the local heuristic. */
+  t?: (source: string, vars?: Record<string, string | number>) => string;
 }
 
 export const SuggestionSchema = z.object({

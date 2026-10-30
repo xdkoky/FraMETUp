@@ -8,10 +8,13 @@ import { cn } from "@/lib/utils";
 import { logoutAction } from "@/app/(auth)/actions";
 import { NAV_ITEMS, SECONDARY_NAV } from "./nav-items";
 import { Wordmark } from "@/components/brand";
+import { LocaleSwitch } from "@/i18n/locale-switch";
+import { useT } from "@/i18n/client";
 
 function Logo() {
+  const t = useT();
   return (
-    <Link href="/dashboard" className="flex items-center gap-2.5 group" aria-label="FraMETUp home">
+    <Link href="/dashboard" className="flex items-center gap-2.5 group" aria-label={t("FraMETUp home")}>
       <svg viewBox="0 0 32 32" className="size-7" aria-hidden>
         <rect x="2" y="9" width="28" height="20" rx="3" fill="#151923" stroke="#2A3142" />
         <path d="M3 9 L7 3 H13 L9 9 Z M13 9 L17 3 H23 L19 9 Z" fill="#E8B04B" />
@@ -24,12 +27,13 @@ function Logo() {
 }
 
 export function Sidebar({ isAdmin, displayName, pendingReviews }: { isAdmin: boolean; displayName: string; pendingReviews: number }) {
+  const t = useT();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
   const links = (
-    <nav aria-label="Primary" className="flex flex-col gap-0.5">
+    <nav aria-label={t("Primary")} className="flex flex-col gap-0.5">
       {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
         <Link
           key={href}
@@ -43,9 +47,9 @@ export function Sidebar({ isAdmin, displayName, pendingReviews }: { isAdmin: boo
         >
           {isActive(href) && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.5 rounded-full bg-accent" aria-hidden />}
           <Icon className={cn("size-4 shrink-0", isActive(href) ? "text-accent" : "text-faint group-hover:text-muted")} aria-hidden />
-          <span className="flex-1">{label}</span>
+          <span className="flex-1">{t(label)}</span>
           {href === "/feedback" && pendingReviews > 0 && (
-            <span className="rounded-full bg-amber text-ink text-[10px] font-semibold px-1.5 min-w-5 text-center" aria-label={`${pendingReviews} pending`}>
+            <span className="rounded-full bg-amber text-ink text-[10px] font-semibold px-1.5 min-w-5 text-center" aria-label={t("{n} pending", { n: pendingReviews })}>
               {pendingReviews}
             </span>
           )}
@@ -64,7 +68,7 @@ export function Sidebar({ isAdmin, displayName, pendingReviews }: { isAdmin: boo
           )}
         >
           <Icon className="size-4 text-faint" aria-hidden />
-          {label}
+          {t(label)}
         </Link>
       ))}
     </nav>
@@ -73,12 +77,13 @@ export function Sidebar({ isAdmin, displayName, pendingReviews }: { isAdmin: boo
   const footer = (
     <div className="mt-auto pt-4 border-t border-line-soft">
       <div className="px-3 pb-2">
+        <LocaleSwitch className="mb-3" />
         <div className="text-sm text-text truncate">{displayName}</div>
-        <div className="text-xs text-faint">METU · Film Directing</div>
+        <div className="text-xs text-faint">{t("METU · Film Directing")}</div>
       </div>
       <form action={logoutAction}>
         <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted hover:text-text hover:bg-surface/70">
-          <LogOut className="size-4 text-faint" aria-hidden /> Sign out
+          <LogOut className="size-4 text-faint" aria-hidden />{" "}{t("Sign out")}
         </button>
       </form>
     </div>
@@ -101,19 +106,19 @@ export function Sidebar({ isAdmin, displayName, pendingReviews }: { isAdmin: boo
         <button
           onClick={() => setOpen(true)}
           className="rounded-lg p-2 text-muted hover:bg-surface-2"
-          aria-label="Open navigation"
+          aria-label={t("Open navigation")}
           aria-expanded={open}
         >
           <Menu className="size-5" />
         </button>
       </div>
       {open && (
-        <div className="lg:hidden fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Navigation">
+        <div className="lg:hidden fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label={t("Navigation")}>
           <div className="absolute inset-0 bg-black/60" onClick={() => setOpen(false)} />
           <div className="absolute inset-y-0 right-0 w-72 max-w-[85vw] bg-ink border-l border-line px-3 py-5 flex flex-col">
             <div className="flex items-center justify-between px-2 mb-6">
               <Logo />
-              <button onClick={() => setOpen(false)} className="rounded-lg p-2 text-muted hover:bg-surface-2" aria-label="Close navigation">
+              <button onClick={() => setOpen(false)} className="rounded-lg p-2 text-muted hover:bg-surface-2" aria-label={t("Close navigation")}>
                 <X className="size-5" />
               </button>
             </div>

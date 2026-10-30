@@ -5,10 +5,15 @@ import { getTaxonomy } from "@/lib/services/taxonomy";
 import { Page } from "@/components/shell/page";
 import { Card, PageHeader } from "@/components/ui/misc";
 import { RequestForm } from "./request-form";
+import { getT } from "@/i18n/server";
 
-export const metadata: Metadata = { title: "Request feedback" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Request feedback") };
+}
 
 export default async function RequestPage({ searchParams }: { searchParams: Promise<{ skill?: string; project?: string }> }) {
+  const t = await getT();
   const user = await requireUser();
   const sp = await searchParams;
   const taxonomy = await getTaxonomy();
@@ -20,9 +25,9 @@ export default async function RequestPage({ searchParams }: { searchParams: Prom
   return (
     <Page className="max-w-3xl">
       <PageHeader
-        eyebrow="Feedback"
-        title="Ask someone who saw you work"
-        description="Choose only the skills this person had a real chance to observe. They can answer “not observed” and can decline without a reason."
+        eyebrow={t("Feedback")}
+        title={t("Ask someone who saw you work")}
+        description={t("Choose only the skills this person had a real chance to observe. They can answer “not observed” and can decline without a reason.")}
       />
       <Card className="p-6 sm:p-8">
         <RequestForm

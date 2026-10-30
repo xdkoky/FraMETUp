@@ -42,7 +42,9 @@ export class AnthropicProvider implements AIProvider {
       `<skill_catalog>\n${catalog}\n</skill_catalog>`,
       `<project title="${(input.projectTitle ?? "untitled").replace(/"/g, "'")}" type="${input.projectType ?? "unknown"}" linked_skills="${linked}" />`,
       `<reflection>\n${input.reflectionText}\n</reflection>`,
-      "Analyse the reflection and respond in the required JSON format.",
+      input.language === "hu"
+        ? "Analyse the reflection and respond in the required JSON format. Write every text field in Hungarian, whatever language the reflection is in."
+        : "Analyse the reflection and respond in the required JSON format. Write every text field in English.",
     ].join("\n\n");
 
     const response = await this.client.beta.messages.create({

@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { FieldError, FormMessage, Hint, Input, Label, Select, SubmitButton, Textarea } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
 import { requestFeedback, type FeedbackState } from "../actions";
+import { useT } from "@/i18n/client";
 
 interface P {
   id: string;
@@ -24,6 +25,7 @@ export function RequestForm({
   initialProjectId?: string;
   initialSkillId?: string;
 }) {
+  const t = useT();
   const [state, action] = useActionState<FeedbackState, FormData>(requestFeedback, null);
   const [projectId, setProjectId] = useState(initialProjectId ?? "");
   const project = projects.find((p) => p.id === projectId);
@@ -41,9 +43,9 @@ export function RequestForm({
       <FormMessage state={state} />
       {selected.map((id) => <input key={id} type="hidden" name="skillIds" value={id} />)}
       <div>
-        <Label htmlFor="projectId">Project (optional)</Label>
+        <Label htmlFor="projectId">{t("Project (optional)")}</Label>
         <Select id="projectId" name="projectId" value={projectId} onChange={(e) => setProjectId(e.target.value)}>
-          <option value="">General feedback — not tied to a project</option>
+          <option value="">{t("General feedback — not tied to a project")}</option>
           {projects.map((p) => (
             <option key={p.id} value={p.id}>
               {p.title}
@@ -53,7 +55,7 @@ export function RequestForm({
       </div>
       {project && project.collaborators.length > 0 && (
         <div>
-          <div className="text-sm font-medium mb-1.5">Collaborators on FraMETUp</div>
+          <div className="text-sm font-medium mb-1.5">{t("Collaborators on FraMETUp")}</div>
           <div className="flex flex-wrap gap-1.5">
             {project.collaborators.map((c) => (
               <button
@@ -73,23 +75,23 @@ export function RequestForm({
       )}
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <Label htmlFor="reviewerEmail">Reviewer&apos;s email</Label>
+          <Label htmlFor="reviewerEmail">{t("Reviewer's email")}</Label>
           <Input id="reviewerEmail" name="reviewerEmail" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           <FieldError errors={state?.fieldErrors?.reviewerEmail} />
         </div>
         <div>
-          <Label htmlFor="reviewerRelation">Their role in the work</Label>
-          <Input id="reviewerRelation" name="reviewerRelation" value={relation} onChange={(e) => setRelation(e.target.value)} placeholder="Cinematographer, lead actor, editor…" required />
+          <Label htmlFor="reviewerRelation">{t("Their role in the work")}</Label>
+          <Input id="reviewerRelation" name="reviewerRelation" value={relation} onChange={(e) => setRelation(e.target.value)} placeholder={t("Cinematographer, lead actor, editor…")} required />
           <FieldError errors={state?.fieldErrors?.reviewerRelation} />
         </div>
       </div>
       <div>
-        <Label htmlFor="skill-q">Skills to assess ({selected.length}/6)</Label>
+        <Label htmlFor="skill-q">{t("Skills to assess (")}{selected.length}/6)</Label>
         <div className="mb-2 flex flex-wrap gap-1.5">
           {selected.map((id) => (
             <span key={id} className="inline-flex items-center gap-1 rounded-full border border-accent/40 bg-accent-soft px-2.5 py-1 text-xs text-accent-strong">
               {skillName[id]}
-              <button type="button" onClick={() => setSelected(selected.filter((s) => s !== id))} aria-label={`Remove ${skillName[id]}`}>
+              <button type="button" onClick={() => setSelected(selected.filter((s) => s !== id))} aria-label={t("Remove {name}", { name: skillName[id] })}>
                 <X className="size-3" />
               </button>
             </span>
@@ -97,7 +99,7 @@ export function RequestForm({
         </div>
         {suggestions.length > 0 && (
           <div className="mb-2">
-            <Hint className="mt-0 mb-1">Linked to this project:</Hint>
+            <Hint className="mt-0 mb-1">{t("Linked to this project:")}</Hint>
             <div className="flex flex-wrap gap-1.5">
               {suggestions.map((id) => (
                 <button key={id} type="button" onClick={() => add(id)} className="rounded-full border border-line px-2.5 py-1 text-xs text-muted hover:text-text">
@@ -107,7 +109,7 @@ export function RequestForm({
             </div>
           </div>
         )}
-        <Input id="skill-q" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search for another skill…" />
+        <Input id="skill-q" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("Search for another skill…")} />
         {results.length > 0 && (
           <ul className="mt-1 rounded-lg border border-line-soft">
             {results.map((s) => (
@@ -120,15 +122,15 @@ export function RequestForm({
           </ul>
         )}
         <FieldError errors={state?.fieldErrors?.skillIds} />
-        <Hint>Don&apos;t ask a cinematographer about character writing — match skills to what they saw.</Hint>
+        <Hint>{t("Don't ask a cinematographer about character writing — match skills to what they saw.")}</Hint>
       </div>
       <div>
-        <Label htmlFor="message">Message (optional)</Label>
-        <Textarea id="message" name="message" rows={3} maxLength={1000} placeholder="Honest feedback helps me most. Only rate what you actually saw." />
+        <Label htmlFor="message">{t("Message (optional)")}</Label>
+        <Textarea id="message" name="message" rows={3} maxLength={1000} placeholder={t("Honest feedback helps me most. Only rate what you actually saw.")} />
       </div>
       <div className="flex justify-end">
-        <SubmitButton disabled={!selected.length} pendingText="Sending…">
-          Send request
+        <SubmitButton disabled={!selected.length} pendingText={t("Sending…")}>
+          {t("Send request")}
         </SubmitButton>
       </div>
     </form>

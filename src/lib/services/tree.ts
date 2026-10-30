@@ -7,6 +7,8 @@ import { practiceTier } from "@/lib/xp/xp";
 import type { SkillExtras, SkillStatus, TimeSlice, TreeData } from "@/components/skill-tree/types";
 import { computeAll } from "./mastery";
 import { getTaxonomy } from "./taxonomy";
+import { getLocale, getT } from "@/i18n/server";
+import { CHALLENGES_HU } from "@/lib/taxonomy/hu";
 
 export function toStatus(r: MasteryResult): SkillStatus {
   return {
@@ -49,18 +51,20 @@ export async function getTreeData(user: { id: string; displayName: string; enrol
   const skills = taxonomy.skills.filter((s) => !s.archived);
   const layout = computeRadialLayout(taxonomy.categories, skills, taxonomy.edges);
 
+  const t = await getT();
+  const hu = (await getLocale()) === "hu";
   const now = new Date();
-  const current = await computeAll(user.id);
+  const current = await computeAll(user.id, undefined, t);
   const status = Object.fromEntries(Object.entries(current).map(([k, v]) => [k, toStatus(v)]));
-  const slices: TimeSlice[] = [{ key: "now", label: "Now", states: status }];
+  const slices: TimeSlice[] = [{ key: "now", label: t("Now"), states: status }];
   if (user.enrollmentYear) {
     const currentSem = semesterForDate(user.enrollmentYear, now);
     for (let sem = currentSem - 1; sem >= 1 && sem >= currentSem - 8; sem--) {
       const end = new Date(semesterRange(user.enrollmentYear, sem).end.getTime() - 1000);
-      const past = await computeAll(user.id, end);
+      const past = await computeAll(user.id, end, t);
       slices.push({
         key: `s${sem}`,
-        label: semesterLabel(user.enrollmentYear, sem),
+        label: semesterLabel(user.enrollmentYear, sem, t),
         states: Object.fromEntries(Object.entries(past).map(([k, v]) => [k, toStatus(v)])),
       });
     }
@@ -81,7 +85,7 @@ export async function getTreeData(user: { id: string; displayName: string; enrol
   const extras: Record<string, SkillExtras> = {};
   const ex = (id: string) => (extras[id] ??= { projects: [], challenges: [] });
   for (const l of links) ex(l.skillId).projects.push({ id: l.project.id, title: l.project.title, level: l.demonstratedLevel, relevance: l.relevance });
-  for (const c of challengeSkills) ex(c.skillId).challenges.push(c.challenge);
+  for (const c of challengeSkills) ex(c.skillId).challenges.push(hu && CHALLENGES_HU[c.challenge.id] ? { id: c.challenge.id, title: CHALLENGES_HU[c.challenge.id].title } : c.challenge);
 
   return {
     categories: taxonomy.categories.map((c) => ({ id: c.id, code: c.code, name: c.name, color: c.color, description: c.description })),
@@ -108,6 +112,6 @@ export async function getTreeData(user: { id: string; displayName: string; enrol
     goalSkills: [...new Set(goals.map((g) => g.skillId))],
     extras,
     displayName: user.displayName,
-    tierName: practiceTier(xpAgg._sum.awardedXp ?? 0).name,
+    tierName: t(practiceTier(xpAgg._sum.awardedXp ?? 0).name),
   };
 }

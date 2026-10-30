@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { FieldError, FormMessage, Hint, Label, Select, SubmitButton, Textarea } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
 import { submitSelfAssessment, type AssessState } from "../actions";
+import { useT } from "@/i18n/client";
 
 export function AssessForm({
   skillId,
@@ -18,6 +19,7 @@ export function AssessForm({
   next?: string;
   current?: number;
 }) {
+  const t = useT();
   const [state, action] = useActionState<AssessState, FormData>(submitSelfAssessment, null);
   const [level, setLevel] = useState<number | null>(null);
   const needsSupport = (level ?? 0) >= 4;
@@ -27,8 +29,8 @@ export function AssessForm({
       <input type="hidden" name="skillId" value={skillId} />
       <input type="hidden" name="next" value={next ?? ""} />
       <fieldset>
-        <legend className="text-sm font-medium">Which statement best describes you today?</legend>
-        <Hint className="mt-1 mb-3">Choose based on what you have actually done, not what you could probably do.{current ? ` Last time you chose level ${current}.` : ""}</Hint>
+        <legend className="text-sm font-medium">{t("Which statement best describes you today?")}</legend>
+        <Hint className="mt-1 mb-3">{t("Choose based on what you have actually done, not what you could probably do.")}{current ? " " + t("Last time you chose level {n}.", { n: current }) : ""}</Hint>
         <div className="space-y-2" role="radiogroup">
           {levels.map((l, i) => (
             <label
@@ -46,9 +48,9 @@ export function AssessForm({
         </div>
       </fieldset>
       <div>
-        <Label htmlFor="exampleProjectId">Example project {needsSupport && <span className="text-amber">(or a reflection below)</span>}</Label>
+        <Label htmlFor="exampleProjectId">{t("Example project")}{" "}{needsSupport && <span className="text-amber">{t("(or a reflection below)")}</span>}</Label>
         <Select id="exampleProjectId" name="exampleProjectId" defaultValue="">
-          <option value="">None</option>
+          <option value="">{t("None")}</option>
           {projects.map((p) => (
             <option key={p.id} value={p.id}>
               {p.title}
@@ -57,14 +59,14 @@ export function AssessForm({
         </Select>
       </div>
       <div>
-        <Label htmlFor="reflection">Why this level? {needsSupport ? <span className="text-amber">(required for levels 4–5 without an example)</span> : "(optional)"}</Label>
-        <Textarea id="reflection" name="reflection" rows={3} maxLength={3000} placeholder="Describe a specific moment that shows it." />
+        <Label htmlFor="reflection">{t("Why this level?")}{" "}{needsSupport ? <span className="text-amber">{t("(required for levels 4–5 without an example)")}</span> : "(optional)"}</Label>
+        <Textarea id="reflection" name="reflection" rows={3} maxLength={3000} placeholder={t("Describe a specific moment that shows it.")} />
         <FieldError errors={state?.fieldErrors?.reflection} />
-        <Hint>Higher claims need evidence: unsupported level 4–5 ratings are counted as level 3.</Hint>
+        <Hint>{t("Higher claims need evidence: unsupported level 4–5 ratings are counted as level 3.")}</Hint>
       </div>
       <div className="flex justify-end">
-        <SubmitButton disabled={!level} pendingText="Saving…">
-          Save assessment
+        <SubmitButton disabled={!level} pendingText={t("Saving…")}>
+          {t("Save assessment")}
         </SubmitButton>
       </div>
     </form>

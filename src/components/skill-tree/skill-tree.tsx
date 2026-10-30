@@ -20,6 +20,7 @@ import { CategoryNode, CenterNode, SectorNode, SkillNode, type CategoryNodeData,
 import { FloatingEdge, type FloatingEdgeData } from "./floating-edge";
 import { SkillDetail, type LinkedSkill } from "./skill-detail";
 import type { TreeData } from "./types";
+import { useT } from "@/i18n/client";
 
 const nodeTypes = { skill: SkillNode, category: CategoryNode, center: CenterNode, sector: SectorNode };
 const edgeTypes = { floating: FloatingEdge };
@@ -29,6 +30,7 @@ const SKILL_W = 132;
 const CAT_W = 150;
 
 function TreeInner({ data }: { data: TreeData }) {
+  const t = useT();
   const router = useRouter();
   const params = useSearchParams();
   const { setCenter, fitView } = useReactFlow();
@@ -273,12 +275,12 @@ function TreeInner({ data }: { data: TreeData }) {
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search 105 skills…"
-                aria-label="Search skills"
+                placeholder={t("Search 105 skills…")}
+                aria-label={t("Search skills")}
                 className="h-9 w-full rounded-lg border border-line bg-ink/60 pl-8 pr-8 text-sm placeholder:text-faint focus:border-accent focus:outline-none"
               />
               {query && (
-                <button onClick={() => setQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-faint hover:text-text" aria-label="Clear search">
+                <button onClick={() => setQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-faint hover:text-text" aria-label={t("Clear search")}>
                   <X className="size-4" />
                 </button>
               )}
@@ -286,13 +288,13 @@ function TreeInner({ data }: { data: TreeData }) {
             <button
               onClick={() => setView(view === "graph" ? "list" : "graph")}
               className="flex h-9 items-center gap-1.5 rounded-lg border border-line px-2.5 text-xs text-muted hover:text-text"
-              aria-label={view === "graph" ? "Switch to list view" : "Switch to graph view"}
+              aria-label={view === "graph" ? t("Switch to list view") : t("Switch to graph view")}
             >
               {view === "graph" ? <List className="size-4" /> : <Network className="size-4" />}
             </button>
           </div>
           {searchResults.length > 0 && (
-            <ul className="mt-2 max-h-60 overflow-auto rounded-lg border border-line-soft" role="listbox" aria-label="Search results">
+            <ul className="mt-2 max-h-60 overflow-auto rounded-lg border border-line-soft" role="listbox" aria-label={t("Search results")}>
               {searchResults.map((s) => (
                 <li key={s.id}>
                   <button
@@ -305,13 +307,13 @@ function TreeInner({ data }: { data: TreeData }) {
                   >
                     <span className="size-2 rounded-full" style={{ background: catById[s.categoryId].color }} aria-hidden />
                     <span className="flex-1 truncate">{s.name}</span>
-                    <span className="text-[11px] text-faint">{STATE_STYLE[stateOf(s.id).state].short}</span>
+                    <span className="text-[11px] text-faint">{t(STATE_STYLE[stateOf(s.id).state].short)}</span>
                   </button>
                 </li>
               ))}
             </ul>
           )}
-          <div className="mt-3 flex flex-wrap gap-1" role="group" aria-label="Filter by category">
+          <div className="mt-3 flex flex-wrap gap-1" role="group" aria-label={t("Filter by category")}>
             {data.categories.map((c) => (
               <button
                 key={c.id}
@@ -337,19 +339,19 @@ function TreeInner({ data }: { data: TreeData }) {
                 }}
                 className="rounded-md px-2 py-1 text-[11px] text-faint hover:text-text"
               >
-                Reset
+                {t("Reset")}
               </button>
             )}
           </div>
           <div className="mt-3 flex items-center justify-between gap-2 border-t border-line-soft pt-3">
             <label className="flex items-center gap-2 text-xs text-muted">
               <input type="checkbox" checked={focusMode} onChange={(e) => setFocusMode(e.target.checked)} className="accent-[#6E9BFF]" />
-              Focus branch
+              {t("Focus branch")}
             </label>
             {data.slices.length > 1 && (
               <label className="flex items-center gap-1.5 text-xs text-muted">
                 <History className="size-3.5 text-faint" aria-hidden />
-                <span className="sr-only">View tree as of</span>
+                <span className="sr-only">{t("View tree as of")}</span>
                 <select
                   value={sliceKey}
                   onChange={(e) => setSliceKey(e.target.value)}
@@ -367,14 +369,14 @@ function TreeInner({ data }: { data: TreeData }) {
         </div>
         {sliceKey !== "now" && (
           <div className="pointer-events-auto rounded-lg border border-amber/30 bg-amber-soft px-3 py-2 text-xs text-amber">
-            Viewing your tree as it was at the end of {slice.label}. Evidence added later is hidden.
+            {t("Viewing your tree as it was at the end of")}{" "}{slice.label}{t(". Evidence added later is hidden.")}
           </div>
         )}
       </div>
 
       {/* Legend */}
       <div className="absolute bottom-3 left-3 z-20 hidden md:block lg:bottom-5 lg:left-5">
-        <div className="card px-3 py-2.5" role="group" aria-label="Filter by proficiency state">
+        <div className="card px-3 py-2.5" role="group" aria-label={t("Filter by proficiency state")}>
           <div className="flex flex-wrap gap-x-3 gap-y-1.5">
             {STATE_ORDER.map((s) => (
               <button
@@ -388,15 +390,15 @@ function TreeInner({ data }: { data: TreeData }) {
                   style={s === "NOT_ASSESSED" ? { border: `1.5px dashed ${STATE_STYLE[s].color}` } : { background: STATE_STYLE[s].color }}
                   aria-hidden
                 />
-                <span className="text-muted">{STATE_STYLE[s].short}</span>
+                <span className="text-muted">{t(STATE_STYLE[s].short)}</span>
                 <span className="font-mono text-faint">{counts[s] ?? 0}</span>
               </button>
             ))}
           </div>
           <div className="mt-2 flex gap-3 text-[10.5px] text-faint">
-            <span>Ring = estimate · opacity = confidence</span>
-            <span className="text-accent">— builds on</span>
-            <span className="text-amber">— supports</span>
+            <span>{t("Ring = estimate · opacity = confidence")}</span>
+            <span className="text-accent">{t("— builds on")}</span>
+            <span className="text-amber">{t("— supports")}</span>
           </div>
         </div>
       </div>
@@ -421,7 +423,7 @@ function TreeInner({ data }: { data: TreeData }) {
           maxZoom={2.2}
           proOptions={{ hideAttribution: true }}
           className="!bg-transparent"
-          aria-label="Director skill tree"
+          aria-label={t("Director skill tree")}
         >
           <Background variant={BackgroundVariant.Dots} gap={28} size={1} color="#1C2230" />
           <Controls showInteractive={false} position="bottom-right" />
@@ -448,7 +450,7 @@ function TreeInner({ data }: { data: TreeData }) {
                           <button onClick={() => select(s.id, false)} className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-surface">
                             <span className="flex-1 text-sm">{s.name}</span>
                             <span className="text-xs" style={{ color: STATE_STYLE[st.state].color }}>
-                              {STATE_STYLE[st.state].label}
+                              {t(STATE_STYLE[st.state].label)}
                             </span>
                           </button>
                         </li>
@@ -471,7 +473,7 @@ function TreeInner({ data }: { data: TreeData }) {
           <button
             onClick={() => select(null, false)}
             className="absolute right-3 top-3 rounded-lg p-1.5 text-faint hover:bg-surface-2 hover:text-text"
-            aria-label="Close details"
+            aria-label={t("Close details")}
           >
             <X className="size-4" />
           </button>

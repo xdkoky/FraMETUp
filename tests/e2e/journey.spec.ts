@@ -1,5 +1,10 @@
 import { expect, test } from "@playwright/test";
 
+// The UI defaults to Hungarian; these specs assert on the English copy.
+test.beforeEach(async ({ context, baseURL }) => {
+  await context.addCookies([{ name: "lang", value: "en", url: baseURL ?? "http://localhost:3000" }]);
+});
+
 /**
  * The core Phase 1 journey from the brief:
  * register → onboard → skill tree → inspect skill → create project → link skill
@@ -99,6 +104,7 @@ test("private projects are not visible to other students", async ({ page, browse
   const privateUrl = page.url();
 
   const other = await browser.newContext();
+  await other.addCookies([{ name: "lang", value: "en", url: "http://localhost:3000" }]);
   const p2 = await other.newPage();
   await p2.goto("/register");
   await p2.getByLabel("What should we call you?").fill("Curious Classmate");

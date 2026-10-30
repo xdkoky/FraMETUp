@@ -1,5 +1,10 @@
 import { expect, test } from "@playwright/test";
 
+// The UI defaults to Hungarian; these specs assert on the English copy.
+test.beforeEach(async ({ context, baseURL }) => {
+  await context.addCookies([{ name: "lang", value: "en", url: baseURL ?? "http://localhost:3000" }]);
+});
+
 test("the app is usable on a phone", async ({ page }) => {
   await page.goto("/login");
   await page.getByLabel("Email").fill("demo@frametup.local");

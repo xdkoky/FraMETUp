@@ -5,19 +5,26 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatDate(d: Date | string | null | undefined, opts: Intl.DateTimeFormatOptions = { day: "numeric", month: "short", year: "numeric" }) {
+type T = (s: string, vars?: Record<string, string | number>) => string;
+const identity: T = (s, vars) => (vars ? s.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m)) : s);
+
+export function formatDate(
+  d: Date | string | null | undefined,
+  opts: Intl.DateTimeFormatOptions = { day: "numeric", month: "short", year: "numeric" },
+  intlLocale = "en-GB",
+) {
   if (!d) return "—";
-  return new Date(d).toLocaleDateString("en-GB", opts);
+  return new Date(d).toLocaleDateString(intlLocale, opts);
 }
 
-export function relativeTime(d: Date | string) {
+export function relativeTime(d: Date | string, t: T = identity, intlLocale = "en-GB") {
   const diff = Date.now() - new Date(d).getTime();
   const day = 86400000;
-  if (diff < 60000) return "just now";
-  if (diff < 3600000) return `${Math.floor(diff / 60000)} min ago`;
-  if (diff < day) return `${Math.floor(diff / 3600000)} h ago`;
-  if (diff < 30 * day) return `${Math.floor(diff / day)} d ago`;
-  return formatDate(d);
+  if (diff < 60000) return t("just now");
+  if (diff < 3600000) return t("{n} min ago", { n: Math.floor(diff / 60000) });
+  if (diff < day) return t("{n} h ago", { n: Math.floor(diff / 3600000) });
+  if (diff < 30 * day) return t("{n} d ago", { n: Math.floor(diff / day) });
+  return formatDate(d, undefined, intlLocale);
 }
 
 export const PROJECT_TYPE_LABEL: Record<string, string> = {
