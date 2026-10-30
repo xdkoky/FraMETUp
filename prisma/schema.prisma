@@ -1,0 +1,715 @@
+// DIRECTOR OS — relational schema
+//
+// Design notes
+// - Assessment records (self, peer, instructor, AI) are append-only. A newer record
+//   supersedes an older one for calculation purposes, but history is never rewritten.
+// - Every assessment references the SkillRubric version it was made against, so
+//   historical results stay interpretable after taxonomy revisions.
+// - MasterySnapshot stores the computed estimate *and* the explanation that produced
+//   it, plus the algorithm + taxonomy version, so past results remain explainable.
+// - Soft deletion (deletedAt) is used for user-authored content that other records
+//   may point to (projects, evidence, reflections, users).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url       = env("DATABASE_URL") // pooled connection (Supabase pooler on Vercel)
+  directUrl = env("DIRECT_URL")   // direct connection, used for migrations
+}
+
+// ───────────────────────────── Identity & access ─────────────────────────────
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+  isDemo       Boolean   @default(false)
+
+  profile        UserProfile?
+  privacy        PrivacySettings?
+  roles          UserRole[]
+  sessions       Session[]
+  memberships    CohortMembership[]
+  projects       Project[]            @relation("ProjectOwner")
+  collaborations ProjectCollaborator[]
+  selfAssessments SelfAssessment[]
+  reviewRequestsSent     PeerReviewRequest[] @relation("RequestRequester")
+  reviewRequestsReceived PeerReviewRequest[] @relation("RequestReviewer")
+  reviewsWritten  PeerReview[]          @relation("ReviewReviewer")
+  reviewsReceived PeerReview[]          @relation("ReviewSubject")
+  instructorAssessmentsGiven    InstructorAssessment[] @relation("InstructorAuthor")
+  instructorAssessmentsReceived InstructorAssessment[] @relation("InstructorStudent")
+  aiAssessments   AIAssessment[]
+  masterySnapshots MasterySnapshot[]
+  experienceEvents ExperienceEvent[]
+  reflections     Reflection[]
+  challengeCompletions ChallengeCompletion[]
+  challengesCreated Challenge[]
+  goals           LearningGoal[]
+  notifications   Notification[]
+  auditLogs       AuditLog[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  userAgent String?
+
+  @@index([userId])
+}
+
+model Role {
+  id          String     @id @default(cuid())
+  key         RoleKey    @unique
+  name        String
+  description String
+  users       UserRole[]
+}
+
+enum RoleKey {
+  STUDENT
+  INSTRUCTOR
+  ADMIN
+}
+
+/// Global role assignment. "Peer reviewer" is deliberately NOT a global role:
+/// it is granted per request through PeerReviewRequest.
+model UserRole {
+  id         String   @id @default(cuid())
+  userId     String
+  roleId     String
+  cohortId   String?
+  verified   Boolean  @default(false)
+  grantedAt  DateTime @default(now())
+  grantedById String?
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role       Role     @relation(fields: [roleId], references: [id])
+  cohort     Cohort?  @relation(fields: [cohortId], references: [id])
+
+  @@unique([userId, roleId, cohortId])
+}
+
+/// Public-facing profile information, kept separate from account data.
+model UserProfile {
+  userId          String    @id
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName     String
+  academicYear    Int?      // 1–4 (BA) or 5+ for MA / alumni
+  enrollmentYear  Int?      // calendar year the student started; used to derive semesters
+  interests       String[]
+  experience      String?
+  bio             String?
+  onboardedAt     DateTime?
+  updatedAt       DateTime  @updatedAt
+}
+
+model PrivacySettings {
+  userId                   String     @id
+  user                     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  profileVisibility        Visibility @default(PRIVATE)
+  defaultProjectVisibility Visibility @default(PRIVATE)
+  shareDnaWithCohort       Boolean    @default(false)
+  aiConsent                Boolean    @default(false)
+  aiConsentAt              DateTime?
+  allowReviewRequests      Boolean    @default(true)
+  retentionDays            Int?       // null = keep until the user deletes
+  updatedAt                DateTime   @updatedAt
+}
+
+enum Visibility {
+  PRIVATE
+  COLLABORATORS
+  COHORT
+}
+
+model Cohort {
+  id          String   @id @default(cuid())
+  name        String
+  institution String   @default("METU")
+  startYear   Int
+  programme   String   @default("Film Directing BA")
+  authorized  Boolean  @default(false) // set by an administrator
+  createdAt   DateTime @default(now())
+  members     CohortMembership[]
+  roles       UserRole[]
+}
+
+model CohortMembership {
+  id       String   @id @default(cuid())
+  cohortId String
+  userId   String
+  joinedAt DateTime @default(now())
+  cohort   Cohort   @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([cohortId, userId])
+}
+
+// ───────────────────────────── Skill taxonomy ─────────────────────────────
+
+model SkillTaxonomyVersion {
+  id          String   @id @default(cuid())
+  version     Int      @unique
+  label       String
+  notes       String?
+  isCurrent   Boolean  @default(false)
+  publishedAt DateTime @default(now())
+  rubrics     SkillRubric[]
+}
+
+model SkillCategory {
+  id          String  @id // stable key, e.g. "visual"
+  code        String  @unique // "A".."H"
+  name        String
+  description String
+  color       String
+  order       Int
+  skills      Skill[]
+}
+
+model Skill {
+  id            String    @id // stable key, e.g. "visual.blocking"
+  categoryId    String
+  category      SkillCategory @relation(fields: [categoryId], references: [id])
+  name          String
+  description   String
+  outcomes      String[]
+  criteria      String[]
+  evidenceTypes String[]
+  exercises     String[]
+  version       Int       @default(1)
+  archivedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  rubrics        SkillRubric[]
+  dependsOn      SkillDependency[] @relation("DependencyTo")
+  enables        SkillDependency[] @relation("DependencyFrom")
+  evidenceLinks  SkillEvidenceLink[]
+  selfAssessments SelfAssessment[]
+  peerReviewItems PeerReviewItem[]
+  requestSkills   PeerReviewRequestSkill[]
+  instructorAssessments InstructorAssessment[]
+  snapshots      MasterySnapshot[]
+  challengeSkills ChallengeSkill[]
+  goalSkills     LearningGoalSkill[]
+
+  @@index([categoryId])
+}
+
+/// Five behaviourally anchored level descriptors. A new row is written for every
+/// revision; assessments reference the exact row they were made against.
+model SkillRubric {
+  id                String   @id @default(cuid())
+  skillId           String
+  skill             Skill    @relation(fields: [skillId], references: [id])
+  version           Int
+  levels            String[] // index 0 = level 1
+  taxonomyVersionId String
+  taxonomyVersion   SkillTaxonomyVersion @relation(fields: [taxonomyVersionId], references: [id])
+  isCurrent         Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  createdById       String?
+
+  selfAssessments       SelfAssessment[]
+  peerReviewItems       PeerReviewItem[]
+  instructorAssessments InstructorAssessment[]
+
+  @@unique([skillId, version])
+}
+
+enum DependencyKind {
+  PREREQUISITE
+  RELATED
+}
+
+/// fromSkill supports toSkill. PREREQUISITE edges guide learning; they never lock content.
+model SkillDependency {
+  id          String         @id @default(cuid())
+  fromSkillId String
+  toSkillId   String
+  kind        DependencyKind
+  note        String?
+  fromSkill   Skill @relation("DependencyFrom", fields: [fromSkillId], references: [id])
+  toSkill     Skill @relation("DependencyTo", fields: [toSkillId], references: [id])
+
+  @@unique([fromSkillId, toSkillId, kind])
+}
+
+// ───────────────────────────── Projects & evidence ─────────────────────────────
+
+enum ProjectType {
+  SHORT_FILM
+  DIALOGUE_SCENE
+  SILENT_EXERCISE
+  DOCUMENTARY
+  MUSIC_VIDEO
+  COMMERCIAL
+  EXPERIMENTAL
+  FILM_ANALYSIS
+  DIRECTING_WORKSHOP
+  INDEPENDENT_PRACTICE
+}
+
+enum ProjectStatus {
+  PLANNING
+  IN_PRODUCTION
+  POST_PRODUCTION
+  COMPLETED
+  ABANDONED
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  ownerId     String
+  owner       User          @relation("ProjectOwner", fields: [ownerId], references: [id])
+  title       String
+  type        ProjectType
+  description String
+  logline     String?
+  startDate   DateTime?
+  endDate     DateTime?
+  course      String?
+  semester    Int?          // 1-based semester index in the programme
+  studentRole String        @default("Director")
+  objectives  String[]
+  challenges  String?
+  status      ProjectStatus @default(PLANNING)
+  visibility  Visibility    @default(PRIVATE)
+  completedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?
+
+  collaborators ProjectCollaborator[]
+  evidence      ProjectEvidence[]
+  skillLinks    SkillEvidenceLink[]
+  reflections   Reflection[]
+  reviewRequests PeerReviewRequest[]
+  reviews       PeerReview[]
+  challengeCompletions ChallengeCompletion[]
+
+  @@index([ownerId])
+}
+
+model ProjectCollaborator {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId    String?  // null for collaborators without an account
+  user      User?    @relation(fields: [userId], references: [id])
+  name      String
+  role      String   // e.g. "Cinematographer", "Lead actor"
+  createdAt DateTime @default(now())
+
+  @@unique([projectId, userId])
+}
+
+enum EvidenceKind {
+  SCRIPT
+  STORYBOARD
+  SHOT_LIST
+  DIRECTORS_NOTES
+  VIDEO_LINK
+  DOCUMENT_LINK
+  FILE
+  NOTE
+}
+
+model ProjectEvidence {
+  id          String       @id @default(cuid())
+  projectId   String
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  kind        EvidenceKind
+  title       String
+  description String?
+  url         String?
+  // File metadata — the file itself lives outside the public web root.
+  fileName    String?
+  mimeType    String?
+  sizeBytes   Int?
+  storageKey  String?      @unique
+  rightsConfirmed Boolean  @default(false) // uploader confirms they may store/share this
+  createdAt   DateTime     @default(now())
+  deletedAt   DateTime?
+
+  skillLinks  SkillEvidenceLink[]
+
+  @@index([projectId])
+}
+
+enum Relevance {
+  PRIMARY
+  SECONDARY
+  INCIDENTAL
+}
+
+enum Independence {
+  WITH_GUIDANCE
+  WITH_SUPPORT
+  INDEPENDENT
+}
+
+/// Connects a project to a skill. When demonstratedLevel is set, the student mapped
+/// this project against the skill rubric — this is the "structured project evidence" source.
+model SkillEvidenceLink {
+  id                String        @id @default(cuid())
+  projectId         String
+  skillId           String
+  evidenceId        String?
+  relevance         Relevance     @default(SECONDARY)
+  difficulty        Int           @default(2) // 1 = routine, 2 = stretching, 3 = demanding
+  independence      Independence  @default(INDEPENDENT)
+  demonstratedLevel Int?          // 1..5, rubric-anchored
+  justification     String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  project           Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  skill             Skill         @relation(fields: [skillId], references: [id])
+  evidence          ProjectEvidence? @relation(fields: [evidenceId], references: [id], onDelete: SetNull)
+
+  @@unique([projectId, skillId])
+  @@index([skillId])
+}
+
+// ───────────────────────────── Assessments ─────────────────────────────
+
+model SelfAssessment {
+  id         String   @id @default(cuid())
+  userId     String
+  skillId    String
+  rubricId   String
+  level      Int      // 1..5
+  reflection String?
+  exampleProjectId String?
+  createdAt  DateTime @default(now())
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill      Skill       @relation(fields: [skillId], references: [id])
+  rubric     SkillRubric @relation(fields: [rubricId], references: [id])
+
+  @@index([userId, skillId, createdAt])
+}
+
+enum ReviewRequestStatus {
+  PENDING
+  COMPLETED
+  DECLINED
+  CANCELLED
+}
+
+model PeerReviewRequest {
+  id           String   @id @default(cuid())
+  requesterId  String
+  reviewerId   String
+  projectId    String?
+  reviewerRelation String // the reviewer's role in relation to the work
+  message      String?
+  status       ReviewRequestStatus @default(PENDING)
+  createdAt    DateTime @default(now())
+  respondedAt  DateTime?
+  requester    User     @relation("RequestRequester", fields: [requesterId], references: [id])
+  reviewer     User     @relation("RequestReviewer", fields: [reviewerId], references: [id])
+  project      Project? @relation(fields: [projectId], references: [id])
+  skills       PeerReviewRequestSkill[]
+  review       PeerReview?
+
+  @@index([reviewerId, status])
+  @@index([requesterId])
+}
+
+model PeerReviewRequestSkill {
+  requestId String
+  skillId   String
+  request   PeerReviewRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  skill     Skill             @relation(fields: [skillId], references: [id])
+
+  @@id([requestId, skillId])
+}
+
+enum Observation {
+  NOT_OBSERVED
+  INSUFFICIENT_EVIDENCE
+  OBSERVED_WITH_DIFFICULTY
+  DEMONSTRATED_WITH_SUPPORT
+  DEMONSTRATED_INDEPENDENTLY
+  DEMONSTRATED_CONSISTENTLY
+}
+
+enum Familiarity {
+  BRIEF        // saw the result only
+  WORKED_ALONGSIDE
+  CLOSE_COLLABORATOR
+}
+
+model PeerReview {
+  id             String   @id @default(cuid())
+  requestId      String   @unique
+  reviewerId     String
+  subjectId      String
+  projectId      String?
+  familiarity    Familiarity @default(WORKED_ALONGSIDE)
+  overallComment String?
+  /// Hide reviewer identity from the subject (protects reviewers from pressure).
+  anonymousToSubject Boolean @default(false)
+  submittedAt    DateTime @default(now())
+  request        PeerReviewRequest @relation(fields: [requestId], references: [id])
+  reviewer       User     @relation("ReviewReviewer", fields: [reviewerId], references: [id])
+  subject        User     @relation("ReviewSubject", fields: [subjectId], references: [id])
+  project        Project? @relation(fields: [projectId], references: [id])
+  items          PeerReviewItem[]
+
+  @@index([subjectId])
+}
+
+model PeerReviewItem {
+  id          String      @id @default(cuid())
+  reviewId    String
+  skillId     String
+  rubricId    String
+  observation Observation
+  comment     String?
+  example     String?
+  review      PeerReview  @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  skill       Skill       @relation(fields: [skillId], references: [id])
+  rubric      SkillRubric @relation(fields: [rubricId], references: [id])
+
+  @@unique([reviewId, skillId])
+}
+
+/// Instructor feedback is one perspective among several — it does not override others.
+model InstructorAssessment {
+  id           String   @id @default(cuid())
+  instructorId String
+  studentId    String
+  skillId      String
+  rubricId     String
+  level        Int
+  comment      String
+  projectId    String?
+  createdAt    DateTime @default(now())
+  instructor   User        @relation("InstructorAuthor", fields: [instructorId], references: [id])
+  student      User        @relation("InstructorStudent", fields: [studentId], references: [id])
+  skill        Skill       @relation(fields: [skillId], references: [id])
+  rubric       SkillRubric @relation(fields: [rubricId], references: [id])
+
+  @@index([studentId, skillId])
+}
+
+enum AIAssessmentKind {
+  REFLECTION_ANALYSIS
+  CHALLENGE_GENERATION
+}
+
+enum SuggestionStatus {
+  SUGGESTED
+  ACCEPTED
+  DISMISSED
+}
+
+/// AI output is stored as a *suggestion*. Only items the student explicitly accepts
+/// contribute to mastery; AI never overwrites human assessments.
+model AIAssessment {
+  id           String           @id @default(cuid())
+  userId       String
+  kind         AIAssessmentKind
+  provider     String           // "anthropic" | "local-heuristic"
+  model        String?
+  inputType    String           // "reflection" | "project"
+  inputId      String
+  inputChars   Int
+  output       Json
+  createdAt    DateTime         @default(now())
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  suggestions  AISkillSuggestion[]
+
+  @@index([userId, createdAt])
+}
+
+model AISkillSuggestion {
+  id             String           @id @default(cuid())
+  aiAssessmentId String
+  skillId        String
+  rationale      String
+  evidenceQuote  String?
+  suggestedLevel Int?
+  confidence     Float            // provider-reported, 0..1
+  status         SuggestionStatus @default(SUGGESTED)
+  decidedAt      DateTime?
+  aiAssessment   AIAssessment     @relation(fields: [aiAssessmentId], references: [id], onDelete: Cascade)
+
+  @@index([skillId])
+}
+
+model MasterySnapshot {
+  id               String   @id @default(cuid())
+  userId           String
+  skillId          String
+  mastery          Float?   // null = not assessed
+  confidence       Float
+  state            String
+  breakdown        Json
+  explanation      String[]
+  algorithmVersion String
+  taxonomyVersion  Int
+  computedAt       DateTime @default(now())
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill            Skill    @relation(fields: [skillId], references: [id])
+
+  @@index([userId, skillId, computedAt])
+}
+
+// ───────────────────────────── Activity & learning ─────────────────────────────
+
+model ExperienceEvent {
+  id         String   @id @default(cuid())
+  userId     String
+  kind       String
+  sourceId   String
+  baseXp     Int
+  awardedXp  Int
+  reason     String
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, kind, sourceId])
+  @@index([userId, createdAt])
+}
+
+model Reflection {
+  id         String     @id @default(cuid())
+  userId     String
+  projectId  String?
+  title      String
+  answers    Json       // { promptKey: answer }
+  body       String     // flattened text for search / AI analysis
+  visibility Visibility @default(PRIVATE)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  deletedAt  DateTime?
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project    Project?   @relation(fields: [projectId], references: [id])
+
+  @@index([userId])
+}
+
+enum ChallengeSource {
+  CURATED
+  AI_SUGGESTED
+  USER
+}
+
+model Challenge {
+  id                 String   @id
+  title              String
+  objective          String
+  difficulty         Int      // 1..3
+  durationMinutes    Int
+  resources          String[]
+  instructions       String[]
+  completionCriteria String[]
+  reflectionQuestions String[]
+  suggestedEvidence  String[]
+  source             ChallengeSource @default(CURATED)
+  createdById        String?
+  createdBy          User?    @relation(fields: [createdById], references: [id])
+  createdAt          DateTime @default(now())
+  skills             ChallengeSkill[]
+  completions        ChallengeCompletion[]
+}
+
+model ChallengeSkill {
+  challengeId String
+  skillId     String
+  challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  skill       Skill     @relation(fields: [skillId], references: [id])
+
+  @@id([challengeId, skillId])
+}
+
+enum ChallengeStatus {
+  ACCEPTED
+  COMPLETED
+  DISMISSED
+}
+
+model ChallengeCompletion {
+  id          String          @id @default(cuid())
+  userId      String
+  challengeId String
+  status      ChallengeStatus
+  personalNotes String?       // the student's own modifications to the brief
+  projectId   String?
+  startedAt   DateTime        @default(now())
+  completedAt DateTime?
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge   Challenge       @relation(fields: [challengeId], references: [id])
+  project     Project?        @relation(fields: [projectId], references: [id])
+
+  @@unique([userId, challengeId])
+}
+
+enum GoalStatus {
+  ACTIVE
+  ACHIEVED
+  ARCHIVED
+}
+
+model LearningGoal {
+  id          String     @id @default(cuid())
+  userId      String
+  title       String
+  description String?
+  status      GoalStatus @default(ACTIVE)
+  targetSemester Int?
+  createdAt   DateTime   @default(now())
+  achievedAt  DateTime?
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skills      LearningGoalSkill[]
+}
+
+model LearningGoalSkill {
+  goalId  String
+  skillId String
+  goal    LearningGoal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  skill   Skill        @relation(fields: [skillId], references: [id])
+
+  @@id([goalId, skillId])
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  kind      String
+  title     String
+  body      String?
+  href      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String
+  targetType String
+  targetId   String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  actor      User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([actorId, createdAt])
+  @@index([targetType, targetId])
+}
