@@ -440,6 +440,7 @@ function TreeInner({ data }: { data: TreeData }) {
               <X className="size-4" />
             </button>
             <SkillDetail
+              key={sel.id}
               compact
               skill={sel}
               category={catById[sel.categoryId]}
@@ -448,6 +449,7 @@ function TreeInner({ data }: { data: TreeData }) {
               enables={linked(rel.post.get(sel.id) ?? [])}
               related={linked(rel.related.get(sel.id) ?? [])}
               extras={data.extras[sel.id] ?? { projects: [], challenges: [] }}
+              practice={data.practice}
               isGoal={data.goalSkills.includes(sel.id)}
               onNavigate={(id) => select(id)}
             />

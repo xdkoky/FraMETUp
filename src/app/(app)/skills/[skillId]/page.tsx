@@ -44,6 +44,7 @@ export default async function SkillPage({ params }: { params: Promise<{ skillId:
           enables={linked(post)}
           related={linked(rel)}
           extras={data.extras[skillId] ?? { projects: [], challenges: [] }}
+          practice={data.practice}
           isGoal={data.goalSkills.includes(skillId)}
         />
       </Card>
