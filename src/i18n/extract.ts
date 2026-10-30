@@ -56,6 +56,7 @@ export function extractKeys(root = path.join(process.cwd(), "src")): Set<string>
   }
   // Module-level option lists rendered through t()
   [
+    "Foundations", "Builds up", "Advanced",
     "Any length", "Up to 1½ hours", "Up to half a day", "Up to a day",
     "About you", "Interests", "A first goal", "How it works",
     "Primary", "Secondary", "Incidental", "Routine", "Stretching", "Demanding",
