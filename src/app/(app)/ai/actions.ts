@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
+import { getLocale, getT } from "@/i18n/server";
 import { requireUser } from "@/lib/auth/session";
 import { AI_DAILY_LIMIT, AI_MAX_INPUT_CHARS, externalAIConfigured, getProvider, type ReflectionAnalysis } from "@/lib/ai";
 import { LocalHeuristicProvider } from "@/lib/ai/local";
@@ -27,13 +28,13 @@ export async function analyzeReflection(reflectionId: string): Promise<AnalysisR
     where: { id: reflectionId, userId: user.id, deletedAt: null },
     include: { project: { include: { skillLinks: { select: { skillId: true } } } } },
   });
-  if (!reflection) return { error: "Reflection not found." };
+  if (!reflection) return { error: (await getT())("Reflection not found.") };
 
   const since = new Date(Date.now() - 86400000);
   const used = await db.aIAssessment.count({ where: { userId: user.id, createdAt: { gte: since } } });
-  if (used >= AI_DAILY_LIMIT) return { error: `Daily analysis limit reached (${AI_DAILY_LIMIT}). Try again tomorrow.` };
+  if (used >= AI_DAILY_LIMIT) return { error: (await getT())("Daily analysis limit reached ({n}). Try again tomorrow.", { n: AI_DAILY_LIMIT }) };
   if (reflection.body.length > AI_MAX_INPUT_CHARS) {
-    return { error: `This reflection is ${reflection.body.length.toLocaleString()} characters; analysis is limited to ${AI_MAX_INPUT_CHARS.toLocaleString()}. Split it into shorter reflections.` };
+    return { error: (await getT())("This reflection is {n} characters; analysis is limited to {max}. Split it into shorter reflections.", { n: reflection.body.length, max: AI_MAX_INPUT_CHARS }) };
   }
 
   const privacy = await db.privacySettings.findUnique({ where: { userId: user.id } });
@@ -44,10 +45,13 @@ export async function analyzeReflection(reflectionId: string): Promise<AnalysisR
       ? "Used the local heuristic because AI analysis isn't enabled in your privacy settings. Nothing left this server."
       : !externalAIConfigured()
         ? "No AI provider is configured, so the local keyword heuristic was used. Nothing left this server."
-        : undefined;
+        : undefined; // translated in the client
 
   const taxonomy = await getTaxonomy();
+  const [t, locale] = await Promise.all([getT(), getLocale()]);
   const input = {
+    language: locale,
+    t,
     reflectionText: reflection.body,
     projectTitle: reflection.project?.title,
     projectType: reflection.project?.type,

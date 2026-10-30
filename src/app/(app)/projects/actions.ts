@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { getT } from "@/i18n/server";
 import { requireUser } from "@/lib/auth/session";
 import { EvidenceSchema, LinkSkillSchema, PROJECT_STATUSES, ProjectSchema } from "@/lib/validation/project";
 import { assertCanEditProject } from "@/lib/services/access";
@@ -192,7 +193,8 @@ export async function addCollaborator(projectId: string, _: ActionState, formDat
   }
   await db.projectCollaborator.create({ data: { projectId, name, role, userId } });
   revalidatePath(`/projects/${projectId}`);
-  return { ok: userId ? `${name} was added and linked to their FraMETUp account.` : `${name} was added.` };
+  const t = await getT();
+  return { ok: userId ? t("{name} was added and linked to their FraMETUp account.", { name }) : t("{name} was added.", { name }) };
 }
 
 export async function removeCollaborator(projectId: string, collaboratorId: string) {

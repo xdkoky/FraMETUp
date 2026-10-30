@@ -5,12 +5,14 @@ import { aggregateCategory } from "@/lib/assessment/engine";
 import { practiceTier } from "@/lib/xp/xp";
 import { computeAll } from "./mastery";
 import { getTaxonomy } from "./taxonomy";
+import { getT } from "@/i18n/server";
 
 /** Live development picture for one user — always computed from stored evidence. */
 export const getDevelopment = cache(async (userId: string) => {
+  const t = await getT();
   const [taxonomy, mastery, xpAgg] = await Promise.all([
     getTaxonomy(),
-    computeAll(userId),
+    computeAll(userId, undefined, t),
     db.experienceEvent.aggregate({ where: { userId }, _sum: { awardedXp: true } }),
   ]);
   const categories = taxonomy.categories.map((c) => ({

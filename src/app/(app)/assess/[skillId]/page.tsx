@@ -5,14 +5,20 @@ import { ArrowLeft } from "lucide-react";
 import { requireUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { getTaxonomy } from "@/lib/services/taxonomy";
-import { formatDate } from "@/lib/utils";
+
 import { Page } from "@/components/shell/page";
 import { Card } from "@/components/ui/misc";
 import { AssessForm } from "./assess-form";
+import { getFormat, getT } from "@/i18n/server";
 
-export const metadata: Metadata = { title: "Assess a skill" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Assess a skill") };
+}
 
 export default async function AssessSkill({ params, searchParams }: { params: Promise<{ skillId: string }>; searchParams: Promise<{ next?: string }> }) {
+  const fmt = await getFormat();
+  const t = await getT();
   const { skillId } = await params;
   const { next } = await searchParams;
   const user = await requireUser();
@@ -27,7 +33,7 @@ export default async function AssessSkill({ params, searchParams }: { params: Pr
   return (
     <Page className="max-w-3xl">
       <Link href={next === "queue" ? "/assess" : `/skills?skill=${skillId}`} className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted hover:text-text">
-        <ArrowLeft className="size-4" aria-hidden /> Back
+        <ArrowLeft className="size-4" aria-hidden />{" "}{t("Back")}
       </Link>
       <div className="slate-label mb-2" style={{ color: category.color }}>
         {category.code} · {category.name}
@@ -39,14 +45,14 @@ export default async function AssessSkill({ params, searchParams }: { params: Pr
       </Card>
       {history.length > 0 && (
         <section className="mt-8">
-          <h2 className="slate-label mb-3">Your history for this skill</h2>
+          <h2 className="slate-label mb-3">{t("Your history for this skill")}</h2>
           <ol className="space-y-2">
             {history.map((h) => (
               <li key={h.id} className="flex gap-4 rounded-lg border border-line-soft px-4 py-3 text-sm">
                 <span className="font-mono text-accent">L{h.level}</span>
                 <div className="flex-1">
                   <div className="text-xs text-faint">
-                    {formatDate(h.createdAt)} · rubric v{h.rubric.version}
+                    {fmt.date(h.createdAt)}{" "}{t("· rubric v")}{h.rubric.version}
                   </div>
                   {h.reflection && <p className="mt-1 text-muted">{h.reflection}</p>}
                 </div>

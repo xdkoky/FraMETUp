@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./button";
+import { useT } from "@/i18n/client";
 
 const field =
   "w-full rounded-lg bg-ink/60 border border-line px-3 text-sm text-text placeholder:text-faint transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25";
@@ -42,15 +43,17 @@ export function Hint({ children, className }: { children: React.ReactNode; class
 }
 
 export function FieldError({ errors }: { errors?: string[] }) {
+  const t = useT();
   if (!errors?.length) return null;
   return (
     <p role="alert" className="text-xs text-danger mt-1.5">
-      {errors[0]}
+      {t(errors[0])}
     </p>
   );
 }
 
 export function FormMessage({ state }: { state?: { error?: string; ok?: string } | null }) {
+  const t = useT();
   if (!state?.error && !state?.ok) return null;
   return (
     <div
@@ -60,7 +63,7 @@ export function FormMessage({ state }: { state?: { error?: string; ok?: string }
         state.error ? "border-danger/30 bg-danger/10 text-danger" : "border-success/30 bg-success/10 text-success",
       )}
     >
-      {state.error ?? state.ok}
+      {t((state.error ?? state.ok) as string)}
     </div>
   );
 }

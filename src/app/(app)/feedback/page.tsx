@@ -5,18 +5,26 @@ import { requireUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { canSeeReviewerIdentity } from "@/lib/auth/policy";
 import { toViewer } from "@/lib/services/access";
-import { OBSERVATION_LABEL, formatDate, relativeTime } from "@/lib/utils";
+import { OBSERVATION_LABEL } from "@/lib/utils";
 import { Page } from "@/components/shell/page";
 import { LinkButton } from "@/components/ui/button";
 import { Badge, Card, CardHeader, EmptyState, PageHeader } from "@/components/ui/misc";
 import { ConfirmButton } from "../projects/[id]/widgets";
 import { cancelRequest } from "./actions";
+import { getFormat, getT } from "@/i18n/server";
+import { getTaxonomy } from "@/lib/services/taxonomy";
 
-export const metadata: Metadata = { title: "Feedback" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Feedback") };
+}
 
 const STATUS_TONE = { PENDING: "amber", COMPLETED: "success", DECLINED: "neutral", CANCELLED: "neutral" } as const;
 
 export default async function FeedbackPage({ searchParams }: { searchParams: Promise<{ sent?: string; reviewed?: string }> }) {
+  const { skillById } = await getTaxonomy();
+  const fmt = await getFormat();
+  const t = await getT();
   const user = await requireUser();
   const sp = await searchParams;
   const viewer = await toViewer(user);
@@ -47,20 +55,20 @@ export default async function FeedbackPage({ searchParams }: { searchParams: Pro
   return (
     <Page>
       <PageHeader
-        eyebrow="Collaboration"
-        title="Feedback"
-        description="Structured, skill-specific feedback from the people who actually saw you work. Private to you and the reviewer."
-        actions={<LinkButton href="/feedback/request">Request feedback</LinkButton>}
+        eyebrow={t("Collaboration")}
+        title={t("Feedback")}
+        description={t("Structured, skill-specific feedback from the people who actually saw you work. Private to you and the reviewer.")}
+        actions={<LinkButton href="/feedback/request">{t("Request feedback")}</LinkButton>}
       />
-      {sp.sent && <div className="mb-6 rounded-xl border border-success/30 bg-success/10 p-4 text-sm text-success">Request sent. The reviewer can decline without giving a reason.</div>}
-      {sp.reviewed && <div className="mb-6 rounded-xl border border-success/30 bg-success/10 p-4 text-sm text-success">Thank you — your review was submitted.</div>}
+      {sp.sent && <div className="mb-6 rounded-xl border border-success/30 bg-success/10 p-4 text-sm text-success">{t("Request sent. The reviewer can decline without giving a reason.")}</div>}
+      {sp.reviewed && <div className="mb-6 rounded-xl border border-success/30 bg-success/10 p-4 text-sm text-success">{t("Thank you — your review was submitted.")}</div>}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader eyebrow="Waiting on you" title={`Requests for your feedback (${incoming.length})`} />
+          <CardHeader eyebrow={t("Waiting on you")} title={t("Requests for your feedback ({n})", { n: incoming.length })} />
           <div className="p-5">
             {incoming.length === 0 ? (
-              <EmptyState icon={<Inbox className="size-5" />} title="Nothing to review" />
+              <EmptyState icon={<Inbox className="size-5" />} title={t("Nothing to review")} />
             ) : (
               <ul className="space-y-2">
                 {incoming.map((r) => (
@@ -69,10 +77,10 @@ export default async function FeedbackPage({ searchParams }: { searchParams: Pro
                       <div className="min-w-0 flex-1">
                         <div className="text-sm text-text">{r.requester.profile?.displayName}</div>
                         <div className="text-xs text-muted truncate">
-                          {r.project?.title ?? "General feedback"} · as {r.reviewerRelation} · {r.skills.map((s) => s.skill.name).join(", ")}
+                          {r.project?.title ?? t("General feedback")}{" "}{t("· as")}{" "}{r.reviewerRelation} · {r.skills.map((s) => (skillById[s.skillId]?.name ?? s.skill.name)).join(", ")}
                         </div>
                       </div>
-                      <span className="text-[11px] text-faint">{relativeTime(r.createdAt)}</span>
+                      <span className="text-[11px] text-faint">{fmt.ago(r.createdAt)}</span>
                       <ArrowRight className="size-4 text-amber" aria-hidden />
                     </Link>
                   </li>
@@ -83,11 +91,11 @@ export default async function FeedbackPage({ searchParams }: { searchParams: Pro
         </Card>
 
         <Card>
-          <CardHeader eyebrow="Sent" title="Your requests" />
+          <CardHeader eyebrow={t("Sent")} title={t("Your requests")} />
           <div className="p-5">
             {sent.length === 0 ? (
-              <EmptyState icon={<Send className="size-5" />} title="No requests yet">
-                After a project, ask a collaborator to assess two to four specific skills they observed.
+              <EmptyState icon={<Send className="size-5" />} title={t("No requests yet")}>
+                {t("After a project, ask a collaborator to assess two to four specific skills they observed.")}
               </EmptyState>
             ) : (
               <ul className="divide-y divide-line-soft">
@@ -95,12 +103,12 @@ export default async function FeedbackPage({ searchParams }: { searchParams: Pro
                   <li key={r.id} className="flex items-center gap-3 py-2.5 text-sm">
                     <div className="min-w-0 flex-1">
                       <div className="truncate">
-                        {r.reviewer.profile?.displayName} <span className="text-faint">· {r.project?.title ?? "General"}</span>
+                        {r.reviewer.profile?.displayName} <span className="text-faint">· {r.project?.title ?? t("General")}</span>
                       </div>
-                      <div className="text-xs text-faint truncate">{r.skills.map((s) => s.skill.name).join(", ")}</div>
+                      <div className="text-xs text-faint truncate">{r.skills.map((s) => (skillById[s.skillId]?.name ?? s.skill.name)).join(", ")}</div>
                     </div>
-                    <Badge tone={STATUS_TONE[r.status]}>{r.status.toLowerCase()}</Badge>
-                    {r.status === "PENDING" && <ConfirmButton action={cancelRequest.bind(null, r.id)} label="" icon confirmText="Cancel this request?" />}
+                    <Badge tone={STATUS_TONE[r.status]}>{t(r.status.toLowerCase())}</Badge>
+                    {r.status === "PENDING" && <ConfirmButton action={cancelRequest.bind(null, r.id)} label="" icon confirmText={t("Cancel this request?")} />}
                   </li>
                 ))}
               </ul>
@@ -111,25 +119,25 @@ export default async function FeedbackPage({ searchParams }: { searchParams: Pro
 
       <section className="mt-10">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-display text-3xl">Feedback you received</h2>
+          <h2 className="font-display text-3xl">{t("Feedback you received")}</h2>
           <span className="flex items-center gap-1.5 text-xs text-faint">
-            <ShieldCheck className="size-3.5" aria-hidden /> Only you and each reviewer can see these
+            <ShieldCheck className="size-3.5" aria-hidden />{" "}{t("Only you and each reviewer can see these")}
           </span>
         </div>
         {received.length === 0 ? (
-          <EmptyState title="No feedback yet">Peer feedback carries the most weight in your skill estimates — and has diminishing returns from any single person.</EmptyState>
+          <EmptyState title={t("No feedback yet")}>{t("Peer feedback carries the most weight in your skill estimates — and has diminishing returns from any single person.")}</EmptyState>
         ) : (
           <div className="grid gap-4 lg:grid-cols-2">
             {received.map((r) => (
               <Card key={r.id} className="p-5">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <div className="text-sm font-semibold">{canSeeReviewerIdentity(viewer, r) ? r.reviewer.profile?.displayName : "Anonymous collaborator"}</div>
+                    <div className="text-sm font-semibold">{canSeeReviewerIdentity(viewer, r) ? r.reviewer.profile?.displayName : t("Anonymous collaborator")}</div>
                     <div className="text-xs text-faint">
-                      {r.request.reviewerRelation} · {r.project ? <Link href={`/projects/${r.project.id}`} className="hover:text-text">{r.project.title}</Link> : "General"} · {formatDate(r.submittedAt)}
+                      {r.request.reviewerRelation} · {r.project ? <Link href={`/projects/${r.project.id}`} className="hover:text-text">{r.project.title}</Link> : t("General")} · {fmt.date(r.submittedAt)}
                     </div>
                   </div>
-                  <Badge>{r.familiarity.replace(/_/g, " ").toLowerCase()}</Badge>
+                  <Badge>{t(r.familiarity.replace(/_/g, " ").toLowerCase())}</Badge>
                 </div>
                 {r.overallComment && <p className="mt-3 text-sm text-muted italic leading-relaxed">“{r.overallComment}”</p>}
                 <ul className="mt-4 space-y-3">
@@ -137,12 +145,12 @@ export default async function FeedbackPage({ searchParams }: { searchParams: Pro
                     <li key={i.id}>
                       <div className="flex flex-wrap items-center gap-2 text-sm">
                         <Link href={`/skills?skill=${i.skillId}`} className="text-text hover:text-accent-strong">
-                          {i.skill.name}
+                          {(skillById[i.skillId]?.name ?? i.skill.name)}
                         </Link>
-                        <Badge tone={i.observation === "NOT_OBSERVED" || i.observation === "INSUFFICIENT_EVIDENCE" ? "outline" : "accent"}>{OBSERVATION_LABEL[i.observation]}</Badge>
+                        <Badge tone={i.observation === "NOT_OBSERVED" || i.observation === "INSUFFICIENT_EVIDENCE" ? "outline" : "accent"}>{t(OBSERVATION_LABEL[i.observation])}</Badge>
                       </div>
                       {i.comment && <p className="mt-1 text-xs text-muted leading-relaxed">{i.comment}</p>}
-                      {i.example && <p className="mt-1 text-xs text-faint">Example: {i.example}</p>}
+                      {i.example && <p className="mt-1 text-xs text-faint">{t("Example:")}{" "}{i.example}</p>}
                     </li>
                   ))}
                 </ul>
@@ -154,11 +162,11 @@ export default async function FeedbackPage({ searchParams }: { searchParams: Pro
 
       {written.length > 0 && (
         <section className="mt-10">
-          <h2 className="slate-label mb-3">Reviews you have written</h2>
+          <h2 className="slate-label mb-3">{t("Reviews you have written")}</h2>
           <ul className="grid gap-2 sm:grid-cols-2">
             {written.map((r) => (
               <li key={r.id} className="card px-4 py-3 text-sm">
-                {r.subject.profile?.displayName} · {r.project?.title ?? "General"} <span className="text-xs text-faint">· {r.items.length} skills · {formatDate(r.submittedAt)}{r.anonymousToSubject ? " · anonymous" : ""}</span>
+                {r.subject.profile?.displayName} · {r.project?.title ?? t("General")} <span className="text-xs text-faint">· {r.items.length}{" "}{t("skills ·")}{" "}{fmt.date(r.submittedAt)}{r.anonymousToSubject ? " · anonymous" : ""}</span>
               </li>
             ))}
           </ul>

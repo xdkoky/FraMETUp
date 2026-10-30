@@ -6,10 +6,15 @@ import { Page } from "@/components/shell/page";
 import { Card, PageHeader } from "@/components/ui/misc";
 import { createProject } from "../actions";
 import { ProjectForm } from "../project-form";
+import { getT } from "@/i18n/server";
 
-export const metadata: Metadata = { title: "New project" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("New project") };
+}
 
 export default async function NewProjectPage({ searchParams }: { searchParams: Promise<{ link?: string }> }) {
+  const t = await getT();
   const user = await requireUser();
   const { link } = await searchParams;
   const [privacy, skill] = await Promise.all([
@@ -18,11 +23,11 @@ export default async function NewProjectPage({ searchParams }: { searchParams: P
   ]);
   return (
     <Page className="max-w-3xl">
-      <PageHeader eyebrow="Projects" title="New project" description="Document a piece of work. You'll link skills and evidence on the next screen." />
+      <PageHeader eyebrow={t("Projects")} title={t("New project")} description={t("Document a piece of work. You'll link skills and evidence on the next screen.")} />
       <Card className="p-6 sm:p-8">
         <ProjectForm
           action={createProject}
-          submitLabel="Create project"
+          submitLabel={t("Create project")}
           defaultVisibility={privacy?.defaultProjectVisibility}
           defaultSemester={user.enrollmentYear ? semesterForDate(user.enrollmentYear, new Date()) : null}
           linkSkill={skill?.id}

@@ -22,10 +22,13 @@ export function semesterRange(enrollmentYear: number, semester: number): { start
     : { start: new Date(startYear + 1, 1, 1), end: new Date(startYear + 1, 8, 1) };
 }
 
-export function semesterLabel(enrollmentYear: number | null, semester: number): string {
+type T = (source: string, vars?: Record<string, string | number>) => string;
+const plainT: T = (s, vars) => (vars ? s.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m)) : s);
+
+export function semesterLabel(enrollmentYear: number | null, semester: number, t: T = plainT): string {
   const yearNo = Math.floor((semester - 1) / 2) + 1;
-  const term = semester % 2 === 1 ? "Autumn" : "Spring";
-  if (!enrollmentYear) return `Year ${yearNo} · ${term}`;
+  const term = t(semester % 2 === 1 ? "Autumn" : "Spring");
+  if (!enrollmentYear) return t("Year {y} · {term}", { y: yearNo, term });
   const start = enrollmentYear + yearNo - 1;
-  return `Year ${yearNo} · ${term} ${semester % 2 === 1 ? start : start + 1}`;
+  return t("Year {y} · {term} {year}", { y: yearNo, term, year: semester % 2 === 1 ? start : start + 1 });
 }

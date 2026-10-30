@@ -16,8 +16,8 @@ export function CardHeader({
   className?: string;
 }) {
   return (
-    <div className={cn("flex items-start justify-between gap-4 px-5 pt-5", className)}>
-      <div>
+    <div className={cn("flex flex-wrap items-start justify-between gap-x-4 gap-y-2 px-5 pt-5", className)}>
+      <div className="min-w-0">
         {eyebrow && <div className="slate-label mb-1">{eyebrow}</div>}
         <h2 className="text-[15px] font-semibold text-text">{title}</h2>
       </div>
@@ -129,10 +129,6 @@ export function Meter({
   );
 }
 
-export function DemoBanner() {
-  return (
-    <div className="border-b border-amber/20 bg-amber-soft text-amber text-xs px-4 py-1.5 text-center">
-      Demonstration account — all people, projects and feedback here are fictional.
-    </div>
-  );
+export function DemoBanner({ children }: { children: React.ReactNode }) {
+  return <div className="border-b border-amber/20 bg-amber-soft text-amber text-xs px-4 py-1.5 text-center">{children}</div>;
 }

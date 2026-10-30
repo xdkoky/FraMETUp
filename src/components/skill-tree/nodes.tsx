@@ -6,6 +6,7 @@ import { Clock, Crosshair } from "lucide-react";
 import type { ProficiencyState } from "@/lib/assessment/engine";
 import { STATE_STYLE } from "@/lib/skill-state";
 import { cn } from "@/lib/utils";
+import { useT } from "@/i18n/client";
 
 const hidden = { opacity: 0, width: 1, height: 1, minWidth: 0, minHeight: 0, border: 0, top: "50%", left: "50%" } as const;
 
@@ -35,6 +36,7 @@ const R = 22;
 const C = 2 * Math.PI * R;
 
 export const SkillNode = memo(function SkillNode({ data, selected }: NodeProps<Node<SkillNodeData>>) {
+  const t = useT();
   const style = STATE_STYLE[data.state];
   const assessed = data.mastery !== null;
   const pct = assessed ? (data.mastery as number) / 100 : 0;
@@ -47,7 +49,7 @@ export const SkillNode = memo(function SkillNode({ data, selected }: NodeProps<N
         "group flex w-[132px] flex-col items-center transition-opacity duration-300",
         data.dim ? "opacity-[0.16]" : "opacity-100",
       )}
-      aria-label={`${data.name}: ${style.label}`}
+      aria-label={`${data.name}: ${t(style.label)}`}
     >
       <CenterHandles />
       <div className="relative size-14">
@@ -84,15 +86,15 @@ export const SkillNode = memo(function SkillNode({ data, selected }: NodeProps<N
           <circle cx="28" cy="28" r={assessed ? 6 : 4} fill={data.categoryColor} fillOpacity={assessed ? 0.95 : 0.45} />
         </svg>
         {data.recent && (
-          <span className="absolute -right-0.5 -top-0.5 size-3 rounded-full bg-amber ring-2 ring-ink" title="Recently strengthened" />
+          <span className="absolute -right-0.5 -top-0.5 size-3 rounded-full bg-amber ring-2 ring-ink" title={t("Recently strengthened")} />
         )}
         {data.goal && (
-          <span className="absolute -left-1 -top-1 rounded-full bg-ink p-0.5 text-accent" title="In your learning goals">
+          <span className="absolute -left-1 -top-1 rounded-full bg-ink p-0.5 text-accent" title={t("In your learning goals")}>
             <Crosshair className="size-3" aria-hidden />
           </span>
         )}
         {data.reassess && (
-          <span className="absolute -left-1 -bottom-1 rounded-full bg-ink p-0.5 text-faint" title="Could use fresh evidence">
+          <span className="absolute -left-1 -bottom-1 rounded-full bg-ink p-0.5 text-faint" title={t("Could use fresh evidence")}>
             <Clock className="size-3" aria-hidden />
           </span>
         )}
@@ -133,13 +135,14 @@ export const CategoryNode = memo(function CategoryNode({ data }: NodeProps<Node<
 export type CenterNodeData = { name: string; tier: string };
 
 export const CenterNode = memo(function CenterNode({ data }: NodeProps<Node<CenterNodeData>>) {
+  const t = useT();
   return (
     <div className="flex flex-col items-center">
       <CenterHandles />
       <div className="relative flex size-28 items-center justify-center rounded-full border border-line bg-[radial-gradient(circle_at_50%_35%,#1D2330,#0B0D12)]">
         <span className="absolute inset-2 rounded-full border border-dashed border-line-soft" aria-hidden />
         <div className="text-center">
-          <div className="slate-label">Director</div>
+          <div className="slate-label">{t("Director")}</div>
           <div className="font-display text-lg leading-tight max-w-[96px] truncate">{data.name.split(" ")[0]}</div>
         </div>
       </div>

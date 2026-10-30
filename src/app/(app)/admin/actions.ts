@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { getT } from "@/i18n/server";
 import { requireRole } from "@/lib/auth/session";
 import { audit } from "@/lib/services/audit";
 
@@ -35,7 +36,7 @@ export async function updateSkill(skillId: string, _: AdminState, formData: Form
   await db.skill.update({ where: { id: skillId }, data: { ...parsed.data, version: before.version + 1 } });
   await audit(admin.id, "taxonomy.skill_update", "Skill", skillId, { fromVersion: before.version, before: { name: before.name, description: before.description } });
   revalidatePath(`/admin/taxonomy/${skillId}`);
-  return { ok: `Saved as skill version ${before.version + 1}.` };
+  return { ok: (await getT())("Saved as skill version {n}.", { n: before.version + 1 }) };
 }
 
 /** Rubric edits create a new rubric version; existing assessments keep pointing at the old one. */
@@ -54,7 +55,7 @@ export async function reviseRubric(skillId: string, _: AdminState, formData: For
   ]);
   await audit(admin.id, "taxonomy.rubric_revise", "Skill", skillId, { version: nextVersion, note });
   revalidatePath(`/admin/taxonomy/${skillId}`);
-  return { ok: `Rubric v${nextVersion} published. Earlier assessments keep their original rubric.` };
+  return { ok: (await getT())("Rubric v{n} published. Earlier assessments keep their original rubric.", { n: nextVersion }) };
 }
 
 export async function setSkillArchived(skillId: string, archived: boolean) {

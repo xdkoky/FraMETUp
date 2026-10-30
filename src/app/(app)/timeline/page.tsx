@@ -7,21 +7,27 @@ import { getTaxonomy } from "@/lib/services/taxonomy";
 import { semesterForDate, semesterLabel, semesterRange } from "@/lib/semester";
 import { STATE_ORDER, STATE_STYLE } from "@/lib/skill-state";
 import type { ProficiencyState } from "@/lib/assessment/engine";
-import { PROJECT_TYPE_LABEL, formatDate } from "@/lib/utils";
+import { PROJECT_TYPE_LABEL } from "@/lib/utils";
 import { Page } from "@/components/shell/page";
 import { LinkButton } from "@/components/ui/button";
 import { Badge, Card, EmptyState, PageHeader } from "@/components/ui/misc";
+import { getFormat, getT } from "@/i18n/server";
 
-export const metadata: Metadata = { title: "Timeline" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Timeline") };
+}
 
 export default async function TimelinePage() {
+  const fmt = await getFormat();
+  const t = await getT();
   const user = await requireUser();
   if (!user.enrollmentYear) {
     return (
       <Page>
-        <PageHeader eyebrow="Timeline" title="Your development over time" />
-        <EmptyState title="Add the year you started" action={<LinkButton href="/profile">Update profile</LinkButton>}>
-          The timeline groups your work by semester, so it needs your enrollment year.
+        <PageHeader eyebrow={t("Timeline")} title={t("Your development over time")} />
+        <EmptyState title={t("Add the year you started")} action={<LinkButton href="/profile">{t("Update profile")}</LinkButton>}>
+          {t("The timeline groups your work by semester, so it needs your enrollment year.")}
         </EmptyState>
       </Page>
     );
@@ -69,7 +75,7 @@ export default async function TimelinePage() {
     const semProjects = projects.filter((p) => (p.semester ? p.semester === sem : inRange(p.startDate ?? p.createdAt)));
     return {
       sem,
-      label: semesterLabel(enroll, sem),
+      label: semesterLabel(enroll, sem, t),
       current: sem === currentSem,
       projects: semProjects,
       types: [...new Set(semProjects.map((p) => PROJECT_TYPE_LABEL[p.type]))],
@@ -86,10 +92,10 @@ export default async function TimelinePage() {
   return (
     <Page className="max-w-5xl">
       <PageHeader
-        eyebrow="Longitudinal view"
-        title="Timeline"
-        description="Your development semester by semester. Skills don't fade just because time passes — older evidence is kept, and you can view your tree as it was at any semester."
-        actions={<LinkButton href="/skills" variant="secondary">Open tree time-travel</LinkButton>}
+        eyebrow={t("Longitudinal view")}
+        title={t("Timeline")}
+        description={t("Your development semester by semester. Skills don't fade just because time passes — older evidence is kept, and you can view your tree as it was at any semester.")}
+        actions={<LinkButton href="/skills" variant="secondary">{t("Open tree time-travel")}</LinkButton>}
       />
       <ol className="relative border-l border-line-soft pl-6 sm:pl-10 space-y-10">
         {semesters.map((s) => {
@@ -102,22 +108,22 @@ export default async function TimelinePage() {
               />
               <div className="flex flex-wrap items-baseline gap-3">
                 <h2 className="font-display text-3xl">{s.label}</h2>
-                {s.current && <Badge tone="accent">Now</Badge>}
-                <span className="text-xs text-faint">{s.assessedAtEnd} skills with evidence</span>
+                {s.current && <Badge tone="accent">{t("Now")}</Badge>}
+                <span className="text-xs text-faint">{s.assessedAtEnd}{" "}{t("skills with evidence")}</span>
                 {!s.current && (
                   <Link href={`/skills`} className="text-xs text-accent hover:underline">
-                    view tree →
+                    {t("view tree →")}
                   </Link>
                 )}
               </div>
               {empty ? (
-                <p className="mt-2 text-sm text-faint">Nothing documented this semester.</p>
+                <p className="mt-2 text-sm text-faint">{t("Nothing documented this semester.")}</p>
               ) : (
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
                   {s.projects.length > 0 && (
                     <Card className="p-4">
                       <div className="slate-label mb-2 flex items-center gap-1.5">
-                        <Clapperboard className="size-3.5" aria-hidden /> Projects
+                        <Clapperboard className="size-3.5" aria-hidden />{" "}{t("Projects")}
                       </div>
                       <ul className="space-y-1.5 text-sm">
                         {s.projects.map((p) => (
@@ -125,17 +131,17 @@ export default async function TimelinePage() {
                             <Link href={`/projects/${p.id}`} className="hover:text-accent-strong">
                               {p.title}
                             </Link>{" "}
-                            <span className="text-xs text-faint">· {PROJECT_TYPE_LABEL[p.type]}</span>
+                            <span className="text-xs text-faint">· {t(PROJECT_TYPE_LABEL[p.type])}</span>
                           </li>
                         ))}
                       </ul>
-                      {s.types.length > 1 && <p className="mt-2 text-[11px] text-faint">Forms explored: {s.types.join(", ")}</p>}
+                      {s.types.length > 1 && <p className="mt-2 text-[11px] text-faint">{t("Forms explored:")}{" "}{s.types.join(", ")}</p>}
                     </Card>
                   )}
                   {s.stronger.length > 0 && (
                     <Card className="p-4">
                       <div className="slate-label mb-2 flex items-center gap-1.5">
-                        <TrendingUp className="size-3.5" aria-hidden /> Stronger evidence
+                        <TrendingUp className="size-3.5" aria-hidden />{" "}{t("Stronger evidence")}
                       </div>
                       <ul className="space-y-1.5 text-sm">
                         {s.stronger.slice(0, 8).map((x) => (
@@ -145,12 +151,12 @@ export default async function TimelinePage() {
                             </Link>
                             <span className="text-[11px] whitespace-nowrap">
                               {x.from === x.to ? (
-                                <span className="text-faint">more evidence</span>
+                                <span className="text-faint">{t("more evidence")}</span>
                               ) : (
-                                <span className="text-faint">{STATE_STYLE[x.from as ProficiencyState].short}</span>
+                                <span className="text-faint">{t(STATE_STYLE[x.from as ProficiencyState].short)}</span>
                               )}
                               <ArrowUpRight className="inline size-3 mx-0.5 text-faint" aria-hidden />
-                              <span style={{ color: STATE_STYLE[x.to as ProficiencyState].color }}>{STATE_STYLE[x.to as ProficiencyState].short}</span>
+                              <span style={{ color: STATE_STYLE[x.to as ProficiencyState].color }}>{t(STATE_STYLE[x.to as ProficiencyState].short)}</span>
                             </span>
                           </li>
                         ))}
@@ -162,7 +168,7 @@ export default async function TimelinePage() {
                       {s.newlyPracticed.length > 0 && (
                         <>
                           <div className="slate-label mb-2 flex items-center gap-1.5">
-                            <Sprout className="size-3.5" aria-hidden /> Newly practised
+                            <Sprout className="size-3.5" aria-hidden />{" "}{t("Newly practised")}
                           </div>
                           <p className="text-sm text-muted">{s.newlyPracticed.map((id) => taxonomy.skillById[id]?.name).join(", ")}</p>
                         </>
@@ -170,7 +176,7 @@ export default async function TimelinePage() {
                       {s.growthAreas.length > 0 && (
                         <>
                           <div className="slate-label mb-2 mt-3 flex items-center gap-1.5">
-                            <Crosshair className="size-3.5" aria-hidden /> Growth areas surfaced by feedback
+                            <Crosshair className="size-3.5" aria-hidden />{" "}{t("Growth areas surfaced by feedback")}
                           </div>
                           <p className="text-sm text-muted">{s.growthAreas.map((id) => taxonomy.skillById[id]?.name).join(", ")}</p>
                         </>
@@ -181,17 +187,17 @@ export default async function TimelinePage() {
                     <Card className="p-4 space-y-2 text-sm">
                       {s.reviews.length > 0 && (
                         <div className="flex items-center gap-2 text-muted">
-                          <MessagesSquare className="size-3.5 text-faint" aria-hidden /> {s.reviews.length} peer review{s.reviews.length > 1 ? "s" : ""} ({s.reviews.map((r) => r.request.reviewerRelation).join(", ")})
+                          <MessagesSquare className="size-3.5 text-faint" aria-hidden /> {s.reviews.length}{" "}{t("peer review")}{s.reviews.length > 1 ? "s" : ""} ({s.reviews.map((r) => r.request.reviewerRelation).join(", ")})
                         </div>
                       )}
                       {s.reflections.map((r) => (
                         <div key={r.id} className="flex items-center gap-2 text-muted">
-                          <BookOpenText className="size-3.5 text-faint" aria-hidden /> {r.title} <span className="text-[11px] text-faint">{formatDate(r.createdAt, { day: "numeric", month: "short" })}</span>
+                          <BookOpenText className="size-3.5 text-faint" aria-hidden /> {r.title} <span className="text-[11px] text-faint">{fmt.date(r.createdAt, { day: "numeric", month: "short" })}</span>
                         </div>
                       ))}
                       {s.goals.map((g) => (
                         <div key={g.id} className="flex items-center gap-2 text-muted">
-                          <Crosshair className="size-3.5 text-faint" aria-hidden /> Goal set: {g.title}
+                          <Crosshair className="size-3.5 text-faint" aria-hidden />{" "}{t("Goal set:")}{" "}{g.title}
                         </div>
                       ))}
                     </Card>
@@ -203,7 +209,7 @@ export default async function TimelinePage() {
         })}
       </ol>
       <p className="mt-10 text-xs text-faint">
-        Snapshots record the algorithm and taxonomy version they were computed with, so past results stay interpretable if either changes.
+        {t("Snapshots record the algorithm and taxonomy version they were computed with, so past results stay interpretable if either changes.")}
       </p>
     </Page>
   );

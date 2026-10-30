@@ -228,11 +228,17 @@ function round(n: number, digits = 1) {
   return Math.round(n * f) / f;
 }
 
+/** Translator for explanation text; English source strings are the keys. */
+export type EngineT = (source: string, vars?: Record<string, string | number>) => string;
+const plainT: EngineT = (s, vars) => (vars ? s.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m)) : s);
+
 export function computeMastery(
   input: SkillEvidence,
   now: Date = new Date(),
   config: EngineConfig = DEFAULT_CONFIG,
+  t: EngineT = plainT,
 ): MasteryResult {
+  const pl = (n: number, one: string, many: string, vars: Record<string, string | number> = {}) => t(n === 1 ? one : many, { n, ...vars });
   const warnings: string[] = [];
   const explanation: string[] = [];
   let usedOlderRubric = false;
@@ -247,7 +253,7 @@ export function computeMastery(
   });
   const latestSelf = [...selfValid].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
   let selfScore: number | null = null;
-  let selfNote = "No self-assessment yet.";
+  let selfNote = t("No self-assessment yet.");
   if (latestSelf) {
     let level = latestSelf.level;
     if (level >= 4 && !latestSelf.hasSupport) {
@@ -256,7 +262,10 @@ export function computeMastery(
     }
     selfScore = levelToScore(level);
     if (latestSelf.rubricVersion !== config.currentRubricVersion) usedOlderRubric = true;
-    selfNote = `Latest self-assessment: level ${latestSelf.level}${level !== latestSelf.level ? " (counted as 3 — add supporting evidence)" : ""}.`;
+    selfNote =
+      level !== latestSelf.level
+        ? t("Latest self-assessment: level {level} (counted as 3 — add supporting evidence).", { level: latestSelf.level })
+        : t("Latest self-assessment: level {level}.", { level: latestSelf.level });
   }
 
   // ── Peer & instructor feedback ──
@@ -294,10 +303,14 @@ export function computeMastery(
   const peerScore = weightedMean(peerPairs);
   const distinctReviewers = byReviewer.size;
   const peerNote = observed.length
-    ? `${observed.length} observation${observed.length === 1 ? "" : "s"} from ${distinctReviewers} reviewer${distinctReviewers === 1 ? "" : "s"}${notObservedCount ? `; ${notObservedCount} marked "not observed" (excluded, not scored as low)` : ""}.`
+    ? pl(observed.length, "1 observation", "{n} observations") +
+      " " +
+      pl(distinctReviewers, "from 1 reviewer", "from {n} reviewers") +
+      (notObservedCount ? t("; {n} marked “not observed” (excluded, not scored as low)", { n: notObservedCount }) : "") +
+      "."
     : notObservedCount
-      ? `${notObservedCount} reviewer response${notObservedCount === 1 ? "" : "s"} marked "not observed" — excluded rather than scored as low.`
-      : "No peer feedback yet.";
+      ? pl(notObservedCount, "1 reviewer response marked “not observed” — excluded rather than scored as low.", "{n} reviewer responses marked “not observed” — excluded rather than scored as low.")
+      : t("No peer feedback yet.");
 
   // ── Structured project evidence ──
   const projectValid = dedupe(input.project, warnings, "project evidence");
@@ -330,10 +343,12 @@ export function computeMastery(
   const projectScore = weightedMean(projectPairs);
   const projectContexts = projectSeen.size;
   const projectNote = projectPairs.length
-    ? `${projectPairs.length} project${projectPairs.length === 1 ? "" : "s"} mapped to the rubric${practicedOnly ? `, ${practicedOnly} more linked as practice only` : ""}.`
+    ? pl(projectPairs.length, "1 project mapped to the rubric", "{n} projects mapped to the rubric") +
+      (practicedOnly ? t(", {n} more linked as practice only", { n: practicedOnly }) : "") +
+      "."
     : practicedOnly
-      ? `${practicedOnly} project${practicedOnly === 1 ? "" : "s"} linked as practice, but not yet mapped to a rubric level.`
-      : "No project evidence linked yet.";
+      ? pl(practicedOnly, "1 project linked as practice, but not yet mapped to a rubric level.", "{n} projects linked as practice, but not yet mapped to a rubric level.")
+      : t("No project evidence linked yet.");
 
   // ── AI suggestions (accepted only) ──
   const aiValid = dedupe(input.ai, warnings, "AI suggestion");
@@ -345,10 +360,10 @@ export function computeMastery(
   const aiScore = weightedMean(aiPairs);
   const aiPending = aiValid.filter((a) => !a.accepted).length;
   const aiNote = aiAccepted.length
-    ? `${aiAccepted.length} AI suggestion${aiAccepted.length === 1 ? "" : "s"} you accepted.`
+    ? pl(aiAccepted.length, "1 AI suggestion you accepted.", "{n} AI suggestions you accepted.")
     : aiPending
-      ? `${aiPending} AI suggestion${aiPending === 1 ? "" : "s"} awaiting your review — not counted until accepted.`
-      : "No accepted AI suggestions.";
+      ? pl(aiPending, "1 AI suggestion awaiting your review — not counted until accepted.", "{n} AI suggestions awaiting your review — not counted until accepted.")
+      : t("No accepted AI suggestions.");
 
   // ── Combine available sources ──
   const scores: Record<SourceKey, number | null> = {
@@ -389,7 +404,7 @@ export function computeMastery(
   const practiced = projectValid.length > 0 || allDates.length > 0;
 
   if (present.length === 0 || presentWeight <= 0) {
-    explanation.push("Not yet assessed. There is no rubric-anchored evidence for this skill — this says nothing about your ability.");
+    explanation.push(t("Not yet assessed. There is no rubric-anchored evidence for this skill — this says nothing about your ability."));
     if (practicedOnly) explanation.push(projectNote);
     if (notObservedCount) explanation.push(peerNote);
     return {
@@ -450,32 +465,33 @@ export function computeMastery(
   const state = stateFor(mastery, confidence);
 
   // ── Explanation ──
-  explanation.push(
-    `Estimate based on ${present.map((k) => SOURCE_LABEL[k].toLowerCase()).join(", ")}.`,
-  );
+  // Lowercase for mid-sentence use, but keep acronyms such as "AI" / "MI".
+  const lowerFirst = (s: string) => (/^\p{Lu}{2}/u.test(s) ? s : s.charAt(0).toLowerCase() + s.slice(1));
+  const sourceList = (keys: SourceKey[]) => keys.map((k) => lowerFirst(t(SOURCE_LABEL[k]))).join(", ");
+  explanation.push(t("Estimate based on {sources}.", { sources: sourceList(present) }));
   if (missing.length) {
-    explanation.push(
-      `Missing: ${missing.map((k) => SOURCE_LABEL[k].toLowerCase()).join(", ")}. Available sources were reweighted, so treat the estimate with caution.`,
-    );
+    explanation.push(t("Missing: {sources}. Available sources were reweighted, so treat the estimate with caution.", { sources: sourceList(missing) }));
   }
   for (const k of present) explanation.push(notes[k]);
   if (selfReportedOnly) {
-    explanation.push("All evidence so far is self-reported, so confidence is capped. Feedback from a collaborator would strengthen it.");
+    explanation.push(t("All evidence so far is self-reported, so confidence is capped. Feedback from a collaborator would strengthen it."));
   }
   if (discrepancy) {
     explanation.push(
       discrepancy.direction === "self-higher"
-        ? "Your self-assessment is noticeably higher than peer observations. That's useful information, not a verdict — consider asking reviewers for concrete examples."
-        : "Peers observed this skill more strongly than you rated yourself. You may be underestimating it.",
+        ? t("Your self-assessment is noticeably higher than peer observations. That's useful information, not a verdict — consider asking reviewers for concrete examples.")
+        : t("Peers observed this skill more strongly than you rated yourself. You may be underestimating it."),
     );
   }
-  if (agreement < 0.75) explanation.push("Sources disagree, which lowers confidence.");
+  if (agreement < 0.75) explanation.push(t("Sources disagree, which lowers confidence."));
   if (usedOlderRubric) {
-    explanation.push("Some evidence was assessed against an earlier rubric version; it still counts, with slightly reduced weight.");
+    explanation.push(t("Some evidence was assessed against an earlier rubric version; it still counts, with slightly reduced weight."));
   }
   if (needsReassessment) {
     explanation.push(
-      `No new evidence for ${Math.floor(monthsBetween(lastEvidenceAt as Date, now))} months. The estimate is kept — skills aren't assumed to fade — but a fresh look would help.`,
+      t("No new evidence for {n} months. The estimate is kept — skills aren't assumed to fade — but a fresh look would help.", {
+        n: Math.floor(monthsBetween(lastEvidenceAt as Date, now)),
+      }),
     );
   }
 

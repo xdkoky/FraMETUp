@@ -5,6 +5,7 @@ import { Check, HelpCircle, Loader2, Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/misc";
 import { analyzeReflection, decideSuggestion, type AnalysisResult } from "../../ai/actions";
+import { useT } from "@/i18n/client";
 
 export interface StoredSuggestion {
   id: string;
@@ -29,10 +30,11 @@ export interface StoredAnalysis {
 }
 
 function providerLabel(p: string) {
-  return p === "anthropic" ? "AI suggestion (Claude)" : "Local heuristic — not AI";
+  return p === "anthropic" ? "AI suggestion (Claude)" : "Local heuristic — not AI"; // translated at use site
 }
 
 export function ReflectionAI({ reflectionId, latest, skillNames }: { reflectionId: string; latest: StoredAnalysis | null; skillNames: Record<string, string> }) {
+  const t = useT();
   const [pending, start] = useTransition();
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [decisions, setDecisions] = useState<Record<string, "ACCEPTED" | "DISMISSED">>({});
@@ -56,7 +58,7 @@ export function ReflectionAI({ reflectionId, latest, skillNames }: { reflectionI
     <div className="mt-4 rounded-xl border border-line-soft bg-ink/40 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-sm font-medium">
-          <Sparkles className="size-4 text-accent" aria-hidden /> Reflection assistant
+          <Sparkles className="size-4 text-accent" aria-hidden />{" "}{t("Reflection assistant")}
         </div>
         <Button
           size="sm"
@@ -65,26 +67,26 @@ export function ReflectionAI({ reflectionId, latest, skillNames }: { reflectionI
           onClick={() => start(async () => setResult(await analyzeReflection(reflectionId)))}
         >
           {pending ? <Loader2 className="size-3.5 animate-spin" aria-hidden /> : <Sparkles className="size-3.5" aria-hidden />}
-          {latest || result ? "Analyse again" : "Organise this reflection"}
+          {latest || result ? t("Analyse again") : t("Organise this reflection")}
         </Button>
       </div>
       <p className="mt-1 text-[11.5px] text-faint">
-        Suggestions only. It reads your text — never footage — and nothing counts toward your skills unless you accept it.
+        {t("Suggestions only. It reads your text — never footage — and nothing counts toward your skills unless you accept it.")}
       </p>
 
-      {result && "error" in result && <p className="mt-3 text-sm text-danger" role="alert">{result.error}</p>}
-      {result && "ok" in result && result.note && <p className="mt-3 text-xs text-amber">{result.note}</p>}
+      {result && "error" in result && <p className="mt-3 text-sm text-danger" role="alert">{t(result.error)}</p>}
+      {result && "ok" in result && result.note && <p className="mt-3 text-xs text-amber">{t(result.note)}</p>}
 
       {view && (
         <div className="mt-4 space-y-4 text-sm">
           <div className="flex items-center gap-2">
-            <Badge tone={view.provider === "anthropic" ? "accent" : "outline"}>{providerLabel(view.provider)}</Badge>
+            <Badge tone={view.provider === "anthropic" ? "accent" : "outline"}>{t(providerLabel(view.provider))}</Badge>
           </div>
           <p className="text-muted leading-relaxed">{view.summary}</p>
 
           {suggestions.length > 0 && (
             <div>
-              <div className="slate-label mb-2">Possible skill evidence</div>
+              <div className="slate-label mb-2">{t("Possible skill evidence")}</div>
               <ul className="space-y-2">
                 {suggestions.map((s) => {
                   const status = (decisions[s.id] ?? s.status) as StoredSuggestion["status"];
@@ -92,9 +94,9 @@ export function ReflectionAI({ reflectionId, latest, skillNames }: { reflectionI
                     <li key={s.id} className="rounded-lg border border-line-soft p-3">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="font-medium text-text">{s.skillName}</span>
-                        {s.suggestedLevel && <Badge>suggests L{s.suggestedLevel}</Badge>}
-                        <span className="text-[11px] text-faint">uncertainty: {s.confidence < 0.35 ? "high" : s.confidence < 0.65 ? "moderate" : "lower"}</span>
-                        {status !== "SUGGESTED" && <Badge tone={status === "ACCEPTED" ? "success" : "neutral"}>{status === "ACCEPTED" ? "Accepted" : "Dismissed"}</Badge>}
+                        {s.suggestedLevel && <Badge>{t("suggests L")}{s.suggestedLevel}</Badge>}
+                        <span className="text-[11px] text-faint">{t("uncertainty:")}{" "}{s.confidence < 0.35 ? "high" : s.confidence < 0.65 ? "moderate" : "lower"}</span>
+                        {status !== "SUGGESTED" && <Badge tone={status === "ACCEPTED" ? "success" : "neutral"}>{status === "ACCEPTED" ? t("Accepted") : t("Dismissed")}</Badge>}
                       </div>
                       <p className="mt-1 text-[12.5px] text-muted">{s.rationale}</p>
                       {s.evidenceQuote && <blockquote className="mt-1.5 border-l-2 border-line pl-2 text-[12px] italic text-faint">“{s.evidenceQuote}”</blockquote>}
@@ -108,7 +110,7 @@ export function ReflectionAI({ reflectionId, latest, skillNames }: { reflectionI
                               setDecisions((d) => ({ ...d, [s.id]: "ACCEPTED" }));
                             })}
                           >
-                            <Check className="size-3.5" aria-hidden /> Accept
+                            <Check className="size-3.5" aria-hidden />{" "}{t("Accept")}
                           </Button>
                           <Button
                             size="sm"
@@ -118,7 +120,7 @@ export function ReflectionAI({ reflectionId, latest, skillNames }: { reflectionI
                               setDecisions((d) => ({ ...d, [s.id]: "DISMISSED" }));
                             })}
                           >
-                            <X className="size-3.5" aria-hidden /> Dismiss
+                            <X className="size-3.5" aria-hidden />{" "}{t("Dismiss")}
                           </Button>
                         </div>
                       )}
@@ -131,7 +133,7 @@ export function ReflectionAI({ reflectionId, latest, skillNames }: { reflectionI
 
           {view.missingEvidence.length > 0 && (
             <div>
-              <div className="slate-label mb-1.5">Missing evidence</div>
+              <div className="slate-label mb-1.5">{t("Missing evidence")}</div>
               <ul className="list-disc pl-4 text-[13px] text-muted space-y-0.5">
                 {view.missingEvidence.map((m) => <li key={m}>{m}</li>)}
               </ul>
@@ -139,7 +141,7 @@ export function ReflectionAI({ reflectionId, latest, skillNames }: { reflectionI
           )}
           {view.questions.length > 0 && (
             <div>
-              <div className="slate-label mb-1.5">Questions to think about</div>
+              <div className="slate-label mb-1.5">{t("Questions to think about")}</div>
               <ul className="space-y-1 text-[13px] text-muted">
                 {view.questions.map((q) => (
                   <li key={q} className="flex gap-2"><HelpCircle className="mt-0.5 size-3.5 shrink-0 text-faint" aria-hidden />{q}</li>
@@ -149,7 +151,7 @@ export function ReflectionAI({ reflectionId, latest, skillNames }: { reflectionI
           )}
           {view.exercises.length > 0 && (
             <div>
-              <div className="slate-label mb-1.5">Small exercises</div>
+              <div className="slate-label mb-1.5">{t("Small exercises")}</div>
               <ul className="list-disc pl-4 text-[13px] text-muted space-y-0.5">
                 {view.exercises.map((q) => <li key={q}>{q}</li>)}
               </ul>

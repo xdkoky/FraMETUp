@@ -2,6 +2,8 @@ import "server-only";
 import { db } from "@/lib/db";
 import { recommendChallenges } from "@/lib/recommend/recommend";
 import type { MasteryMap } from "./mastery";
+import { localizeChallenges } from "./challenges";
+import { getT } from "@/i18n/server";
 import type { getTaxonomy } from "./taxonomy";
 
 export async function getRecommendations(
@@ -10,13 +12,15 @@ export async function getRecommendations(
   taxonomy: Awaited<ReturnType<typeof getTaxonomy>>,
   opts: { availableMinutes?: number | null; limit?: number } = {},
 ) {
-  const [challenges, completions, goals, profile, links] = await Promise.all([
+  const t = await getT();
+  const [rawChallenges, completions, goals, profile, links] = await Promise.all([
     db.challenge.findMany({ include: { skills: true } }),
     db.challengeCompletion.findMany({ where: { userId } }),
     db.learningGoalSkill.findMany({ where: { goal: { userId, status: "ACTIVE" } } }),
     db.userProfile.findUnique({ where: { userId } }),
     db.skillEvidenceLink.findMany({ where: { project: { ownerId: userId, deletedAt: null } }, select: { skillId: true, updatedAt: true } }),
   ]);
+  const challenges = await localizeChallenges(rawChallenges);
   const lastPracticed = new Map<string, Date>();
   for (const l of links) if (!lastPracticed.has(l.skillId) || lastPracticed.get(l.skillId)! < l.updatedAt) lastPracticed.set(l.skillId, l.updatedAt);
 
@@ -40,6 +44,7 @@ export async function getRecommendations(
       now: new Date(),
     },
     opts.limit ?? 3,
+    t,
   );
   const byId = Object.fromEntries(challenges.map((c) => [c.id, c]));
   return recs.map((r) => ({ ...r, challenge: byId[r.challengeId] }));

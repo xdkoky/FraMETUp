@@ -36,9 +36,12 @@ export interface Recommendation {
   reasons: string[];
 }
 
+type T = (source: string, vars?: Record<string, string | number>) => string;
+const plainT: T = (s, vars) => (vars ? s.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m)) : s);
+
 const RECENT_DAYS = 14;
 
-export function recommendChallenges(challenges: RecChallenge[], ctx: RecContext, limit = 3): Recommendation[] {
+export function recommendChallenges(challenges: RecChallenge[], ctx: RecContext, limit = 3, t: T = plainT): Recommendation[] {
   const goals = new Set(ctx.goalSkillIds);
   const interests = new Set(ctx.interestCategoryIds);
   const excluded = new Set(ctx.excluded);
@@ -56,7 +59,7 @@ export function recommendChallenges(challenges: RecChallenge[], ctx: RecContext,
     const goalHits = ch.skills.filter((s) => goals.has(s));
     if (goalHits.length) {
       score += 3 * goalHits.length;
-      reasons.push(`Targets ${goalHits.length} skill${goalHits.length > 1 ? "s" : ""} from your learning goals`);
+      reasons.push(t(goalHits.length > 1 ? "Targets {n} skills from your learning goals" : "Targets 1 skill from your learning goals", { n: goalHits.length }));
     }
 
     const thin = ch.skills.filter((s) => {
@@ -65,7 +68,7 @@ export function recommendChallenges(challenges: RecChallenge[], ctx: RecContext,
     });
     if (thin.length) {
       score += 1.5 * thin.length;
-      reasons.push(`Builds evidence where it is thin (${thin.length} skill${thin.length > 1 ? "s" : ""})`);
+      reasons.push(t(thin.length > 1 ? "Builds evidence where it is thin ({n} skills)" : "Builds evidence where it is thin (1 skill)", { n: thin.length }));
     }
 
     const recent = ch.skills.filter((s) => {
@@ -74,7 +77,7 @@ export function recommendChallenges(challenges: RecChallenge[], ctx: RecContext,
     });
     if (recent.length === ch.skills.length && recent.length > 0) {
       score -= 2;
-      reasons.push("You practised all of these recently — consider variety");
+      reasons.push(t("You practised all of these recently — consider variety"));
     }
 
     // Prerequisite readiness: suggest foundations first, but never block.
@@ -83,13 +86,13 @@ export function recommendChallenges(challenges: RecChallenge[], ctx: RecContext,
     );
     if (ch.difficulty === 3 && unready.length > ch.skills.length / 2) {
       score -= 1;
-      reasons.push("Some foundational skills have no evidence yet — still available, but stretching");
+      reasons.push(t("Some foundational skills have no evidence yet — still available, but stretching"));
     }
 
     const cats = new Set(ch.skills.map((s) => ctx.skills[s]?.categoryId).filter(Boolean));
     if ([...cats].some((c) => interests.has(c as string))) {
       score += 1;
-      reasons.push("Matches your stated interests");
+      reasons.push(t("Matches your stated interests"));
     }
 
     if (ctx.availableMinutes !== null) {
@@ -97,15 +100,15 @@ export function recommendChallenges(challenges: RecChallenge[], ctx: RecContext,
         score += 0.5;
       } else {
         score -= 2;
-        reasons.push("Longer than the time you have available");
+        reasons.push(t("Longer than the time you have available"));
       }
     }
 
     const diffGap = Math.abs(ch.difficulty - preferredDifficulty);
     score -= diffGap * 0.75;
-    if (diffGap === 0) reasons.push("Difficulty fits your current evidence level");
+    if (diffGap === 0) reasons.push(t("Difficulty fits your current evidence level"));
 
-    if (reasons.length === 0) reasons.push("Adds variety to your practice");
+    if (reasons.length === 0) reasons.push(t("Adds variety to your practice"));
 
     out.push({ challengeId: ch.id, score: Math.round(score * 100) / 100, reasons });
   }

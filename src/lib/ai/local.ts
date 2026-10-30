@@ -65,6 +65,7 @@ export class LocalHeuristicProvider implements AIProvider {
   readonly external = false;
 
   async analyzeReflection(input: ReflectionAnalysisInput): Promise<ReflectionAnalysis> {
+    const t = input.t ?? ((s: string, v?: Record<string, string | number>) => (v ? s.replace(/\{(\w+)\}/g, (m, k: string) => (k in v ? String(v[k]) : m)) : s));
     const text = ` ${input.reflectionText.toLowerCase()} `;
     const sentences = input.reflectionText.split(/(?<=[.!?])\s+/);
     const scored = input.catalog
@@ -81,7 +82,10 @@ export class LocalHeuristicProvider implements AIProvider {
       const quote = sentences.find((s) => hits.some((h) => s.toLowerCase().includes(h.trim())));
       return {
         skillId: skill.id,
-        rationale: `Keyword match: your reflection mentions ${hits.map((h) => `“${h.trim()}”`).join(", ")}, which relates to ${skill.name}. This is a text match only — check whether you actually practised it.`,
+        rationale: t("Keyword match: your reflection mentions {words}, which relates to {skill}. This is a text match only — check whether you actually practised it.", {
+          words: hits.map((h) => `“${h.trim()}”`).join(", "),
+          skill: skill.name,
+        }),
         evidenceQuote: quote ? quote.slice(0, 300) : null,
         suggestedLevel: null,
         confidence: Math.min(0.5, 0.15 + hits.length * 0.1),
@@ -92,18 +96,21 @@ export class LocalHeuristicProvider implements AIProvider {
     const nameOf = (id: string) => input.catalog.find((c) => c.id === id)?.name ?? id;
     const missingEvidence = linkedNotMentioned
       .slice(0, 4)
-      .map((id) => `The project is linked to ${nameOf(id)}, but the reflection doesn't describe how you practised it.`);
+      .map((id) => t("The project is linked to {skill}, but the reflection doesn't describe how you practised it.", { skill: nameOf(id) }));
 
     const words = input.reflectionText.trim().split(/\s+/).length;
     return {
       summary:
-        `Local heuristic scan of ${words} words${input.projectTitle ? ` about “${input.projectTitle}”` : ""}. ` +
+        (input.projectTitle
+          ? t("Local heuristic scan of {n} words about “{title}”.", { n: words, title: input.projectTitle })
+          : t("Local heuristic scan of {n} words.", { n: words })) +
+        " " +
         (suggestions.length
-          ? `Found ${suggestions.length} skill${suggestions.length > 1 ? "s" : ""} mentioned by keyword. No AI model was used and no judgement of quality was made.`
-          : "No skill keywords were found. Try describing specific decisions you made on set."),
+          ? t(suggestions.length > 1 ? "Found {n} skills mentioned by keyword. No AI model was used and no judgement of quality was made." : "Found 1 skill mentioned by keyword. No AI model was used and no judgement of quality was made.", { n: suggestions.length })
+          : t("No skill keywords were found. Try describing specific decisions you made on set.")),
       suggestions,
       missingEvidence,
-      questions: QUESTION_BANK.slice(0, 3),
+      questions: QUESTION_BANK.slice(0, 3).map((q) => t(q)),
       exercises: [],
     };
   }

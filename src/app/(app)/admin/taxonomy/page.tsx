@@ -2,14 +2,20 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requireRole } from "@/lib/auth/session";
 import { db } from "@/lib/db";
-import { formatDate } from "@/lib/utils";
+
 import { Page } from "@/components/shell/page";
 import { Badge, Card, PageHeader } from "@/components/ui/misc";
 import { NewSkillForm } from "./forms";
+import { getFormat, getT } from "@/i18n/server";
 
-export const metadata: Metadata = { title: "Taxonomy admin" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return { title: t("Taxonomy admin") };
+}
 
 export default async function TaxonomyAdmin() {
+  const fmt = await getFormat();
+  const t = await getT();
   await requireRole("ADMIN");
   const [categories, skills, version, logs] = await Promise.all([
     db.skillCategory.findMany({ orderBy: { order: "asc" } }),
@@ -20,11 +26,11 @@ export default async function TaxonomyAdmin() {
   return (
     <Page>
       <PageHeader
-        eyebrow={`Administration · taxonomy v${version?.version ?? "?"}`}
-        title="Skill taxonomy"
-        description="Edit skill definitions and rubrics through versioned, audited changes. Historical assessments always keep the rubric they were made against."
+        eyebrow={t("Administration · taxonomy v{v}", { v: version?.version ?? "?" })}
+        title={t("Skill taxonomy")}
+        description={t("Edit skill definitions and rubrics through versioned, audited changes. Historical assessments always keep the rubric they were made against.")}
       />
-      <div className="grid gap-6 lg:grid-cols-12">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         <div className="space-y-6 lg:col-span-8">
           {categories.map((c) => (
             <Card key={c.id} className="p-5">
@@ -42,7 +48,7 @@ export default async function TaxonomyAdmin() {
                       <Link href={`/admin/taxonomy/${s.id}`} className="flex items-center gap-3 py-2 text-sm hover:text-accent-strong">
                         <span className={`flex-1 ${s.archivedAt ? "line-through text-faint" : ""}`}>{s.name}</span>
                         <span className="font-mono text-[11px] text-faint">{s.id}</span>
-                        <Badge>v{s.version} · rubric v{s.rubrics[0]?.version ?? "–"}</Badge>
+                        <Badge>v{s.version}{" "}{t("· rubric v")}{s.rubrics[0]?.version ?? "–"}</Badge>
                         <span className="w-24 text-right text-[11px] text-faint">{s._count.selfAssessments + s._count.evidenceLinks} uses</span>
                       </Link>
                     </li>
@@ -53,18 +59,18 @@ export default async function TaxonomyAdmin() {
         </div>
         <div className="space-y-6 lg:col-span-4">
           <Card className="p-5">
-            <h2 className="text-sm font-semibold">Add a skill</h2>
+            <h2 className="text-sm font-semibold">{t("Add a skill")}</h2>
             <div className="mt-3">
               <NewSkillForm categories={categories.map((c) => ({ id: c.id, name: c.name }))} />
             </div>
           </Card>
           <Card className="p-5">
-            <h2 className="text-sm font-semibold">Recent changes</h2>
+            <h2 className="text-sm font-semibold">{t("Recent changes")}</h2>
             <ul className="mt-3 space-y-2 text-xs text-muted">
-              {logs.length === 0 && <li className="text-faint">No changes yet.</li>}
+              {logs.length === 0 && <li className="text-faint">{t("No changes yet.")}</li>}
               {logs.map((l) => (
                 <li key={l.id}>
-                  <span className="font-mono text-faint">{formatDate(l.createdAt)}</span> {l.action.replace("taxonomy.", "")} · {l.targetId}
+                  <span className="font-mono text-faint">{fmt.date(l.createdAt)}</span> {l.action.replace("taxonomy.", "")} · {l.targetId}
                 </li>
               ))}
             </ul>
