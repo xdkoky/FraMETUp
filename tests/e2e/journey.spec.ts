@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { signIn } from "./helpers";
 
 // The UI defaults to Hungarian; these specs assert on the English copy.
 test.beforeEach(async ({ context, baseURL }) => {
@@ -30,11 +31,15 @@ test("a new student can complete the core journey", async ({ page }) => {
   await page.getByLabel("Your goal, in your own words").fill("Give clearer notes to actors");
   await page.getByRole("button", { name: "Actor communication" }).click();
   await page.getByRole("button", { name: "Continue" }).click();
-  await page.getByLabel("Explore my skill tree").check();
-  await page.getByRole("button", { name: "Finish setup" }).click();
+  await page.getByRole("button", { name: "Continue to the quiz" }).click();
+
+  // 2b. Starting-point quiz is offered; this journey postpones it
+  await expect(page).toHaveURL(/\/quiz/);
+  await page.getByRole("button", { name: /Skip for now/ }).click();
+  await expect(page).toHaveURL(/\/dashboard/);
 
   // 3. Skill tree — everything starts unassessed
-  await expect(page).toHaveURL(/\/skills/);
+  await page.goto("/skills");
   await expect(page.getByRole("group", { name: "Filter by proficiency state" })).toContainText("Unassessed105");
 
   // 4. Inspect a skill via search
@@ -95,11 +100,7 @@ test("a new student can complete the core journey", async ({ page }) => {
 
 test("private projects are not visible to other students", async ({ page, browser }) => {
   // The demo student's projects are private by default.
-  await page.goto("/login");
-  await page.getByLabel("Email").fill("demo@frametup.local");
-  await page.getByLabel("Password").fill("frametup-demo");
-  await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page).toHaveURL(/\/dashboard/);
+  await signIn(page, "demo@frametup.local", "frametup-demo");
   await page.goto("/projects");
   await page.getByRole("link", { name: /Kitchen Table/ }).click();
   const privateUrl = page.url();
@@ -118,4 +119,52 @@ test("private projects are not visible to other students", async ({ page, browse
   // Not onboarded users are redirected to onboarding; once onboarded they would see 404.
   await expect(p2).not.toHaveURL(privateUrl);
   await other.close();
+});
+
+test("a new student can complete the interactive starting-point quiz", async ({ page }) => {
+  await page.goto("/register");
+  await page.getByLabel("What should we call you?").fill("Quiz Taker");
+  await page.getByLabel("Email").fill(`quiz-${Date.now()}@example.test`);
+  await page.getByLabel("Password").fill("Clapper-board-42");
+  await page.getByRole("checkbox").check();
+  await page.getByRole("button", { name: "Create account" }).click();
+  await expect(page).toHaveURL(/\/onboarding/);
+  for (let i = 0; i < 3; i++) await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Continue to the quiz" }).click();
+  await expect(page).toHaveURL(/\/quiz/);
+
+  const next = () => page.getByRole("button", { name: /^(Next|None of these)/ }).click();
+  await page.getByRole("button", { name: "Start the quiz" }).click();
+  await page.getByRole("button", { name: /Edited a film/ }).click();
+  await next();
+  await page.getByRole("radio", { name: /empty space/ }).click();
+  await next();
+  await page.getByRole("button", { name: "Over the suspect's shoulder" }).click();
+  await next();
+  await page.getByRole("radio", { name: /Shot 3/ }).click();
+  await next();
+  await page.getByRole("radio", { name: /keep him at the table/ }).click();
+  await next();
+  for (const beat of ["Two sisters", "A message arrives", "They argue", "One sister quietly"]) await page.getByRole("button", { name: new RegExp(beat) }).click();
+  await next();
+  await page.getByRole("radio", { name: /Busy week/ }).click();
+  await next();
+  await page.getByRole("radio", { name: /With the AD/ }).click();
+  await next();
+  await page.getByRole("radio", { name: /warm lamp/ }).click();
+  await next();
+  for (const [l, r] of [["Long take", "Real-time"], ["Jump cut", "Jittery"], ["Extreme close-up", "Intimacy"]]) {
+    await page.getByRole("button", { name: l, exact: true }).click();
+    await page.getByRole("button", { name: new RegExp(r) }).click();
+  }
+  await next();
+  await page.getByRole("radio", { name: /Write it all down/ }).click();
+  await page.getByRole("button", { name: "See my starting map" }).click();
+
+  await expect(page.getByRole("heading", { name: "Your starting map is ready" })).toBeVisible();
+  await expect(page.getByText("Shot composition")).toBeVisible();
+  await page.getByRole("link", { name: "Open my skill tree" }).click();
+  await expect(page).toHaveURL(/\/skills/);
+  // Quiz levels count as self-reported evidence, not "not yet assessed"
+  await expect(page.getByRole("group", { name: "Filter by proficiency state" })).not.toContainText("Unassessed105");
 });

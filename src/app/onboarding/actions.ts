@@ -62,5 +62,5 @@ export async function completeOnboarding(_: OnboardingState, formData: FormData)
     }
   });
   await audit(user.id, "onboarding.complete", "User", user.id);
-  redirect(d.next === "assess" ? "/assess" : d.next === "skills" ? "/skills?welcome=1" : "/dashboard?welcome=1");
+  redirect("/quiz");
 }

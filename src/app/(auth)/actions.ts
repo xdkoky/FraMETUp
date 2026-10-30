@@ -79,7 +79,9 @@ export async function loginAction(_: AuthState, formData: FormData): Promise<Aut
   await createSession(user.id);
   await audit(user.id, "auth.login", "User", user.id);
   const next = String(formData.get("next") ?? "");
-  redirect(user.profile?.onboardedAt ? (next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard") : "/onboarding");
+  if (!user.profile?.onboardedAt) redirect("/onboarding");
+  if (!user.profile.quizCompletedAt && !user.profile.quizSkippedAt) redirect("/quiz");
+  redirect(next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard");
 }
 
 export async function logoutAction() {

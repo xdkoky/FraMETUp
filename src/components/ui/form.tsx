@@ -8,13 +8,13 @@ import { Button } from "./button";
 import { useT } from "@/i18n/client";
 
 const field =
-  "w-full rounded-lg bg-ink/60 border border-line px-3 text-sm text-text placeholder:text-faint transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25";
+  "w-full rounded-xl bg-ink/60 border border-line px-3.5 text-sm text-text placeholder:text-faint transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25";
 
 export const Input = forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(function Input(
   { className, ...props },
   ref,
 ) {
-  return <input ref={ref} className={cn(field, "h-10", className)} {...props} />;
+  return <input ref={ref} className={cn(field, "h-11", className)} {...props} />;
 });
 
 export const Textarea = forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttributes<HTMLTextAreaElement>>(
@@ -28,7 +28,7 @@ export const Select = forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<H
   ref,
 ) {
   return (
-    <select ref={ref} className={cn(field, "h-10 pr-8 appearance-none bg-no-repeat", className)} {...props}>
+    <select ref={ref} className={cn(field, "h-11 pr-8", className)} {...props}>
       {children}
     </select>
   );

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, BookOpenText, Clapperboard, Crosshair, MessagesSquare, NotebookPen, Plus, Sparkles, Target, TrendingUp } from "lucide-react";
+import { ArrowRight, Clapperboard, Crosshair, MessagesSquare, NotebookPen, Plus, Sparkles, Target, TrendingUp } from "lucide-react";
 import { requireUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { getDevelopment } from "@/lib/services/development";
@@ -8,7 +8,6 @@ import { getRecommendations } from "@/lib/services/recommendations";
 import { recentlyImprovedSkills } from "@/lib/services/tree";
 import { semesterForDate, semesterLabel } from "@/lib/semester";
 import { STATE_STYLE } from "@/lib/skill-state";
-import { XP_LABEL, type XpKind } from "@/lib/xp/xp";
 import { CONFIDENCE_LABEL } from "@/lib/assessment/engine";
 import { CATEGORY_BY_ID } from "@/lib/taxonomy/categories";
 import { CATEGORIES_HU } from "@/lib/taxonomy/hu";
@@ -30,6 +29,44 @@ function greeting() {
   return h < 5 ? "Working late" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
 }
 
+type NextStep = { icon: "feedback" | "quiz" | "project" | "reflect" | "challenge"; eyebrow: string; title: string; body: string; href: string; cta: string };
+
+async function NextStepCard({ step }: { step: NextStep }) {
+  const t = await getT();
+  const Icon = { feedback: MessagesSquare, quiz: Sparkles, project: Clapperboard, reflect: NotebookPen, challenge: Target }[step.icon];
+  return (
+    <section className="relative mb-6 overflow-hidden rounded-2xl border border-accent/25 bg-[radial-gradient(120%_140%_at_0%_0%,rgba(110,155,255,0.16),transparent_55%),var(--color-surface)] p-5 sm:p-6" aria-label={t("Next step")}>
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+        <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-accent text-ink shadow-[0_8px_30px_rgba(110,155,255,0.35)]">
+          <Icon className="size-5" aria-hidden />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="slate-label !text-accent-strong">{step.eyebrow}</div>
+          <h2 className="mt-1 text-xl font-semibold leading-snug">{step.title}</h2>
+          <p className="mt-1 text-sm text-muted">{step.body}</p>
+        </div>
+        <LinkButton href={step.href} size="lg" className="shrink-0">
+          {step.cta} <ArrowRight className="size-4" aria-hidden />
+        </LinkButton>
+      </div>
+      <div className="mt-5 flex flex-wrap gap-2 border-t border-line-soft pt-4">
+        <LinkButton href="/projects/new" variant="secondary" size="sm">
+          <Plus className="size-3.5" aria-hidden /> {t("New project")}
+        </LinkButton>
+        <LinkButton href="/assess" variant="secondary" size="sm">
+          {t("Self-assess")}
+        </LinkButton>
+        <LinkButton href="/feedback/request" variant="secondary" size="sm">
+          {t("Request feedback")}
+        </LinkButton>
+        <LinkButton href="/skills" variant="ghost" size="sm">
+          {t("Open skill tree →")}
+        </LinkButton>
+      </div>
+    </section>
+  );
+}
+
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ welcome?: string }> }) {
   const fmt = await getFormat();
   const shortName = (id: string, fallback: string) => (fmt.locale === "hu" ? CATEGORIES_HU[id]?.short : CATEGORY_BY_ID[id as keyof typeof CATEGORY_BY_ID]?.short) ?? fallback;
@@ -39,7 +76,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const dev = await getDevelopment(user.id);
   const { taxonomy, mastery, categories, totalXp, tier, assessedCount } = dev;
 
-  const [activeProjects, pendingForMe, awaiting, goals, recentXp, unreflected, recentSnapshots, recs, improved] = await Promise.all([
+  const [activeProjects, pendingForMe, awaiting, goals, unreflected, recentSnapshots, recs, improved] = await Promise.all([
     db.project.findMany({
       where: { ownerId: user.id, deletedAt: null, status: { in: ["PLANNING", "IN_PRODUCTION", "POST_PRODUCTION"] } },
       include: { _count: { select: { skillLinks: true, evidence: true } } },
@@ -53,7 +90,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     }),
     db.peerReviewRequest.count({ where: { requesterId: user.id, status: "PENDING" } }),
     db.learningGoal.findMany({ where: { userId: user.id, status: "ACTIVE" }, include: { skills: true }, orderBy: { createdAt: "desc" } }),
-    db.experienceEvent.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, take: 6 }),
     db.project.findMany({
       where: { ownerId: user.id, deletedAt: null, status: "COMPLETED", reflections: { none: { deletedAt: null } } },
       select: { id: true, title: true },
@@ -75,6 +111,27 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const avgConfidence = assessedResults.length ? assessedResults.reduce((s, m) => s + m.confidence, 0) / assessedResults.length : 0;
   const band = avgConfidence === 0 ? "NONE" : avgConfidence < 0.25 ? "LOW" : avgConfidence < 0.55 ? "MODERATE" : avgConfidence < 0.8 ? "GOOD" : "HIGH";
   const sem = user.enrollmentYear ? semesterForDate(user.enrollmentYear, new Date()) : null;
+  const profile = await db.userProfile.findUnique({ where: { userId: user.id }, select: { quizCompletedAt: true } });
+  const projectCount = await db.project.count({ where: { ownerId: user.id, deletedAt: null } });
+  // One clear thing to do next, in priority order.
+  const next: NextStep = pendingForMe[0]
+    ? {
+        icon: "feedback",
+        eyebrow: t("Someone is waiting on you"),
+        title: t("{name} asked for your feedback", { name: pendingForMe[0].requester.profile?.displayName ?? "" }),
+        body: t("It takes about five minutes. Rate only what you actually saw."),
+        href: `/feedback/review/${pendingForMe[0].id}`,
+        cta: t("Give feedback"),
+      }
+    : !profile?.quizCompletedAt
+      ? { icon: "quiz", eyebrow: t("Recommended first step"), title: t("Take the starting-point quiz"), body: t("Eleven hands-on questions give your skill tree a first shape."), href: "/quiz", cta: t("Start the quiz") }
+      : projectCount === 0
+        ? { icon: "project", eyebrow: t("Recommended first step"), title: t("Add your first project"), body: t("Projects are your strongest source of evidence. A class exercise is a great start."), href: "/projects/new", cta: t("New project") }
+        : unreflected[0]
+          ? { icon: "reflect", eyebrow: t("While it's fresh"), title: t("Reflect on {title}", { title: unreflected[0].title }), body: t("Ten honest minutes now become your most useful evidence later."), href: `/projects/${unreflected[0].id}/reflect`, cta: t("Write reflection") }
+          : recs[0]
+            ? { icon: "challenge", eyebrow: t("Your next challenge"), title: recs[0].challenge.title, body: recs[0].challenge.objective, href: `/challenges#${recs[0].challenge.id}`, cta: t("See the challenge") }
+            : { icon: "feedback", eyebrow: t("Keep growing"), title: t("Ask a collaborator for feedback"), body: t("Peer feedback carries the most weight in your skill estimates."), href: "/feedback/request", cta: t("Request feedback") };
   const strongestCats = categories.filter((c) => c.mastery !== null).sort((a, b) => (b.mastery ?? 0) - (a.mastery ?? 0));
 
   return (
@@ -98,21 +155,15 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                 : t("Evidence now supports {n} of {total} skills.", { n: assessedCount, total: taxonomy.skills.length })}
           </p>
         </div>
-        <div className="flex gap-2">
-          <LinkButton href="/assess" variant="secondary">
-            {t("Self-assess")}
-          </LinkButton>
-          <LinkButton href="/projects/new">
-            <Plus className="size-4" aria-hidden />{" "}{t("New project")}
-          </LinkButton>
-        </div>
       </header>
+
+      <NextStepCard step={next} />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
         {/* Development overview */}
         <Card className="lg:col-span-7">
           <CardHeader eyebrow={t("Demonstrated ability")} title={t("Development overview")} action={<Link href="/skills" className="text-xs text-accent hover:underline">{t("Open skill tree →")}</Link>} />
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-line-soft mx-5 mt-4 rounded-xl overflow-hidden border border-line-soft">
+          <div className="grid grid-cols-2 2xl:grid-cols-4 gap-px bg-line-soft mx-5 mt-4 rounded-xl overflow-hidden border border-line-soft">
             {[
               { k: t("Skills with evidence"), v: `${assessedCount}`, sub: t("of {n}", { n: taxonomy.skills.length }) },
               { k: t("Strongly evidenced"), v: `${strongly}`, sub: t("broad & consistent") },
@@ -120,7 +171,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               { k: t("Practised, unmapped"), v: `${practicedNoEvidence}`, sub: t("link to a rubric level") },
             ].map((s) => (
               <div key={s.k} className="bg-surface px-4 py-3">
-                <div className="slate-label">{s.k}</div>
+                <div className="text-xs font-medium text-muted">{s.k}</div>
                 <div className="mt-1 text-2xl font-semibold tabular-nums">{s.v}</div>
                 <div className="text-[11px] text-faint">{s.sub}</div>
               </div>
@@ -286,7 +337,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         </Card>
 
         {/* Recent changes */}
-        <Card className="lg:col-span-4">
+        <Card className="lg:col-span-12">
           <CardHeader eyebrow={t("Last 60 days")} title={t("Skill changes")} />
           <div className="p-5">
             {recentSnapshots.length === 0 ? (
@@ -309,51 +360,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           </div>
         </Card>
 
-        {/* Reflection reminders */}
-        <Card className="lg:col-span-4">
-          <CardHeader eyebrow={t("Reflect")} title={t("Reflection reminders")} />
-          <div className="p-5">
-            {unreflected.length === 0 ? (
-              <div className="flex gap-3 text-sm text-muted">
-                <NotebookPen className="size-4 text-faint shrink-0 mt-0.5" aria-hidden />
-                {t("Every completed project has a reflection. Nice discipline.")}
-              </div>
-            ) : (
-              <ul className="space-y-2">
-                {unreflected.map((p) => (
-                  <li key={p.id}>
-                    <Link href={`/projects/${p.id}/reflect`} className="flex items-center gap-3 rounded-lg border border-line-soft px-3 py-2.5 text-sm hover:border-line">
-                      <BookOpenText className="size-4 text-accent" aria-hidden />
-                      <span className="flex-1 truncate">{t("Reflect on")}{" "}{p.title}</span>
-                      <ArrowRight className="size-3.5 text-faint" aria-hidden />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </Card>
-
-        {/* Activity */}
-        <Card className="lg:col-span-4">
-          <CardHeader eyebrow={t("Practice log")} title={t("Recent activity")} />
-          <div className="p-5">
-            {recentXp.length === 0 ? (
-              <p className="text-sm text-faint">{t("Your activity will appear here.")}</p>
-            ) : (
-              <ul className="space-y-2.5">
-                {recentXp.map((e) => (
-                  <li key={e.id} className="flex items-center gap-3 text-sm">
-                    <Sparkles className="size-3.5 text-amber/80 shrink-0" aria-hidden />
-                    <span className="flex-1 truncate text-muted">{t(XP_LABEL[e.kind as XpKind]) ?? e.kind}</span>
-                    <span className="font-mono text-xs text-amber">+{e.awardedXp}</span>
-                    <span className="text-[11px] text-faint w-16 text-right">{fmt.ago(e.createdAt)}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </Card>
       </div>
     </Page>
   );

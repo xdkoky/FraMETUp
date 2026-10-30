@@ -174,21 +174,8 @@ export function OnboardingFlow({ defaultName, categories, skills, currentYear }:
               </div>
             ))}
           </div>
-          <fieldset className="mt-6">
-            <legend className="text-sm font-medium mb-2">{t("Where would you like to start?")}</legend>
-            <div className="grid gap-2 sm:grid-cols-3">
-              {[
-                ["skills", t("Explore my skill tree")],
-                ["assess", t("Quick self-assessment")],
-                ["dashboard", t("Go to my dashboard")],
-              ].map(([v, l], i) => (
-                <label key={v} className="flex items-center gap-2 rounded-lg border border-line px-3 py-2.5 text-sm has-[:checked]:border-accent has-[:checked]:bg-accent-soft cursor-pointer">
-                  <input type="radio" name="next" value={v} defaultChecked={i === 0} className="accent-[#6E9BFF]" />
-                  {l}
-                </label>
-              ))}
-            </div>
-          </fieldset>
+          <input type="hidden" name="next" value="dashboard" />
+          <p className="mt-6 rounded-xl border border-accent/30 bg-accent-soft px-4 py-3 text-sm text-accent-strong">{t("Next: a short, hands-on quiz that gives your skill tree a first shape.")}</p>
         </section>
 
         <div className="mt-8 flex items-center justify-between">
@@ -200,7 +187,7 @@ export function OnboardingFlow({ defaultName, categories, skills, currentYear }:
               {t("Continue")}{" "}<ArrowRight className="size-4" aria-hidden />
             </Button>
           ) : (
-            <SubmitButton pendingText={t("Setting up…")}>{t("Finish setup")}</SubmitButton>
+            <SubmitButton pendingText={t("Setting up…")}>{t("Continue to the quiz")}</SubmitButton>
           )}
         </div>
       </div>

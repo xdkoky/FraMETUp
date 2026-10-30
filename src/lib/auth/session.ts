@@ -39,6 +39,8 @@ export interface CurrentUser {
   isDemo: boolean;
   displayName: string;
   onboarded: boolean;
+  /** Finished or postponed the starting-point quiz. */
+  quizSeen: boolean;
   roles: RoleKey[];
   enrollmentYear: number | null;
 }
@@ -60,6 +62,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     isDemo: u.isDemo,
     displayName: u.profile?.displayName ?? u.email.split("@")[0],
     onboarded: Boolean(u.profile?.onboardedAt),
+    quizSeen: Boolean(u.profile?.quizCompletedAt || u.profile?.quizSkippedAt),
     roles: u.roles.map((r) => r.role.key),
     enrollmentYear: u.profile?.enrollmentYear ?? null,
   };

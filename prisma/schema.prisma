@@ -110,6 +110,10 @@ model UserProfile {
   experience      String?
   bio             String?
   onboardedAt     DateTime?
+  /// Starting-point quiz: when it was finished or postponed, and the raw answers.
+  quizCompletedAt DateTime?
+  quizSkippedAt   DateTime?
+  quizResult      Json?
   updatedAt       DateTime  @updatedAt
 }
 

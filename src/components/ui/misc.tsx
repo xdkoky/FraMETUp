@@ -69,8 +69,13 @@ export function PageHeader({
   return (
     <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between mb-8">
       <div className="max-w-2xl">
-        {eyebrow && <div className="slate-label mb-2">{eyebrow}</div>}
-        <h1 className="font-display text-4xl md:text-5xl leading-[1.05] tracking-tight text-text">{title}</h1>
+        {eyebrow && (
+          <div className="slate-label mb-3 flex items-center gap-2">
+            <span className="size-1.5 rounded-full bg-accent" aria-hidden />
+            {eyebrow}
+          </div>
+        )}
+        <h1 className="font-display text-[2.6rem] md:text-[3.4rem] leading-[1.02] tracking-tight text-text">{title}</h1>
         {description && <p className="mt-3 text-muted leading-relaxed">{description}</p>}
       </div>
       {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
