@@ -28,7 +28,7 @@ export default async function SettingsPage() {
         <Card>
           <CardHeader title="Your data" />
           <div className="p-5 space-y-3 text-sm text-muted">
-            <p>Download everything DIRECTOR OS stores about you as JSON (GDPR data portability).</p>
+            <p>Download everything FraMETUp stores about you as JSON (GDPR data portability).</p>
             <a href="/api/export" className={buttonClass("secondary", "sm")}>
               <Download className="size-4" aria-hidden /> Export my data
             </a>

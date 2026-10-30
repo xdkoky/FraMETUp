@@ -8,7 +8,7 @@ import {
   type ReflectionAnalysisInput,
 } from "./types";
 
-const SYSTEM_PROMPT = `You are a careful, encouraging assistant inside DIRECTOR OS, a development tool for film directing students at a university.
+const SYSTEM_PROMPT = `You are a careful, encouraging assistant inside FraMETUp, a development tool for film directing students at a university.
 
 You help a student organise a written reflection about their own directing work. You are NOT a grader.
 

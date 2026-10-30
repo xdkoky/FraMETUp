@@ -53,7 +53,7 @@ export function RequestForm({
       </div>
       {project && project.collaborators.length > 0 && (
         <div>
-          <div className="text-sm font-medium mb-1.5">Collaborators on DIRECTOR OS</div>
+          <div className="text-sm font-medium mb-1.5">Collaborators on FraMETUp</div>
           <div className="flex flex-wrap gap-1.5">
             {project.collaborators.map((c) => (
               <button

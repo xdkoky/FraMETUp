@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight, Check, GitBranch, MessagesSquare, Sparkles, Clap
 import { Button } from "@/components/ui/button";
 import { FormMessage, Hint, Input, Label, Select, SubmitButton, Textarea } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
+import { Wordmark } from "@/components/brand";
 import { completeOnboarding, type OnboardingState } from "./actions";
 
 interface Props {
@@ -34,9 +35,7 @@ export function OnboardingFlow({ defaultName, categories, skills, currentYear }:
   return (
     <form action={action} className="w-full max-w-2xl">
       <div className="mb-8 flex items-center justify-between">
-        <span className="font-mono text-[13px] tracking-[0.22em]">
-          DIRECTOR<span className="text-accent">OS</span>
-        </span>
+        <Wordmark />
         <ol className="flex gap-1.5" aria-label="Onboarding progress">
           {STEPS.map((s, i) => (
             <li key={s} aria-current={i === step ? "step" : undefined} className={cn("h-1 w-8 rounded-full", i <= step ? "bg-accent" : "bg-surface-3")}>
@@ -123,7 +122,7 @@ export function OnboardingFlow({ defaultName, categories, skills, currentYear }:
         <section className="animate-[fadein_.25s_ease-out]" hidden={step !== 2} aria-labelledby="s2">
           <div className="slate-label mb-2">Step 3 of 4</div>
           <h2 id="s2" className="font-display text-4xl">Set a first learning goal</h2>
-          <p className="mt-2 text-muted">Optional, but goals help DIRECTOR OS suggest useful next challenges.</p>
+          <p className="mt-2 text-muted">Optional, but goals help FraMETUp suggest useful next challenges.</p>
           <div className="mt-6">
             <Label htmlFor="goalTitle">Your goal, in your own words</Label>
             <Input id="goalTitle" name="goalTitle" maxLength={140} placeholder="e.g. Get more confident giving actors notes on set" />
@@ -156,7 +155,7 @@ export function OnboardingFlow({ defaultName, categories, skills, currentYear }:
 
         <section className="animate-[fadein_.25s_ease-out]" hidden={step !== 3} aria-labelledby="s3">
           <div className="slate-label mb-2">Step 4 of 4</div>
-          <h2 id="s3" className="font-display text-4xl">How DIRECTOR OS thinks</h2>
+          <h2 id="s3" className="font-display text-4xl">How FraMETUp thinks</h2>
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             {[
               { icon: GitBranch, title: "Skills connect", body: "105 directing skills in 8 categories form a map. Links show which skills support others — guidance, never locks." },
