@@ -30,3 +30,20 @@ describe("radial layout", () => {
     expect(computeRadialLayout(CATEGORIES, SKILLS, DEPENDENCIES)).toEqual(layout);
   });
 });
+
+describe("branch layout", () => {
+  it("places every skill of a category, prerequisites in earlier columns, without overlaps", async () => {
+    const { computeBranchLayout } = await import("./layout");
+    for (const c of CATEGORIES) {
+      const skills = SKILLS.filter((s) => s.categoryId === c.id);
+      const l = computeBranchLayout(skills, DEPENDENCIES);
+      expect(Object.keys(l.nodes)).toHaveLength(skills.length);
+      for (const d of DEPENDENCIES) {
+        if (d.kind === "PREREQUISITE" && l.nodes[d.from] && l.nodes[d.to]) expect(l.nodes[d.from].column).toBeLessThan(l.nodes[d.to].column);
+      }
+      const pts = Object.values(l.nodes);
+      for (let i = 0; i < pts.length; i++)
+        for (let j = i + 1; j < pts.length; j++) expect(pts[i].x !== pts[j].x || Math.abs(pts[i].y - pts[j].y) >= 100).toBe(true);
+    }
+  });
+});

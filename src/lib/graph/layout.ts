@@ -107,3 +107,44 @@ export function computeRadialLayout(
 
   return result;
 }
+
+export interface BranchLayout {
+  nodes: Record<string, Point & { column: number }>;
+  columns: number;
+  height: number;
+}
+
+const COL_GAP = 300;
+const ROW_GAP = 128;
+
+/**
+ * Left-to-right layered layout for one category: column = prerequisite depth
+ * within the category, rows ordered by the average row of each skill's
+ * prerequisites (barycentre) to keep links short and mostly uncrossed.
+ */
+export function computeBranchLayout(skills: LayoutSkill[], edges: LayoutEdge[]): BranchLayout {
+  const depths = computeDepths(skills, edges);
+  const ids = new Set(skills.map((s) => s.id));
+  const pre = new Map<string, string[]>();
+  for (const e of edges) {
+    if (e.kind !== "PREREQUISITE" || !ids.has(e.from) || !ids.has(e.to)) continue;
+    pre.set(e.to, [...(pre.get(e.to) ?? []), e.from]);
+  }
+  const columns: string[][] = [];
+  for (const s of [...skills].sort((a, b) => a.id.localeCompare(b.id))) (columns[depths[s.id]] ??= []).push(s.id);
+  const row = new Map<string, number>();
+  columns.forEach((col, c) => {
+    if (c > 0) {
+      const score = (id: string) => {
+        const ps = (pre.get(id) ?? []).filter((p) => row.has(p));
+        return ps.length ? ps.reduce((sum, p) => sum + row.get(p)!, 0) / ps.length : Number.MAX_SAFE_INTEGER;
+      };
+      col.sort((a, b) => score(a) - score(b) || a.localeCompare(b));
+    }
+    col.forEach((id, i) => row.set(id, i - (col.length - 1) / 2));
+  });
+  const nodes: BranchLayout["nodes"] = {};
+  columns.forEach((col, c) => col.forEach((id) => (nodes[id] = { x: c * COL_GAP, y: row.get(id)! * ROW_GAP, column: c })));
+  const tallest = Math.max(1, ...columns.map((c) => c.length));
+  return { nodes, columns: columns.length, height: tallest * ROW_GAP };
+}
