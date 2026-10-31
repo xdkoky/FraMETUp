@@ -20,3 +20,14 @@ export function staffRolesFor(email: string, env: { ADMIN_EMAILS?: string; INSTR
   if (parseEmailList(env.INSTRUCTOR_EMAILS).has(e)) roles.push("INSTRUCTOR");
   return roles;
 }
+
+/**
+ * When ADMIN_EMAILS is configured it is the complete list of administrators: an ADMIN role
+ * held by anyone else (old seed data, a demo admin, a manual grant) is ignored.
+ */
+export function effectiveRoles<R extends string>(email: string, roles: R[], env: { ADMIN_EMAILS?: string }): R[] {
+  const admins = parseEmailList(env.ADMIN_EMAILS);
+  if (admins.size === 0) return roles;
+  const isAdmin = admins.has(email.trim().toLowerCase());
+  return roles.filter((r) => r !== "ADMIN" || isAdmin);
+}
