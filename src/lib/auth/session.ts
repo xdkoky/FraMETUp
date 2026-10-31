@@ -1,4 +1,5 @@
 import "server-only";
+import { effectiveRoles } from "./staff-emails";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
@@ -63,7 +64,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     displayName: u.profile?.displayName ?? u.email.split("@")[0],
     onboarded: Boolean(u.profile?.onboardedAt),
     quizSeen: Boolean(u.profile?.quizCompletedAt || u.profile?.quizSkippedAt),
-    roles: u.roles.map((r) => r.role.key),
+    roles: effectiveRoles(u.email, u.roles.map((r) => r.role.key), { ADMIN_EMAILS: process.env.ADMIN_EMAILS }),
     enrollmentYear: u.profile?.enrollmentYear ?? null,
   };
 });

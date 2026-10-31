@@ -34,7 +34,7 @@ AI is optional. Without `ANTHROPIC_API_KEY`, a local keyword heuristic is used a
    In **Project Settings → API**, copy the project URL (`SUPABASE_URL`) and the `service_role` key (`SUPABASE_SERVICE_ROLE_KEY`). Keep that key secret.
 2. **Vercel:** import this GitHub repo, choose the branch, and add the four variables above as Environment Variables. Don't set `SEED_DEMO_ADMIN` on a public site.
 3. Deploy. The `vercel-build` script runs database migrations, seeds the taxonomy and demo student, and builds the app. Uploads go to a private `evidence` bucket that is created automatically.
-4. To make yourself admin: register on the live site, set `SEED_ADMIN_EMAIL` to your email in Vercel, and redeploy.
+4. To make yourself the admin: register on the live site, set `ADMIN_EMAILS` to your email in Vercel, redeploy, and sign in again. While `ADMIN_EMAILS` is set, only the listed accounts are admins. Teachers go in `INSTRUCTOR_EMAILS`.
 
 Notes: Supabase free projects pause after 7 days without activity (restore them from the dashboard). Rate limiting is per server instance, so replace it with a shared store before wide use.
 
