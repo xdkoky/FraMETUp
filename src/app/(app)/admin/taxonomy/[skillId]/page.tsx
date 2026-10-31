@@ -45,7 +45,7 @@ export default async function AdminSkill({ params }: { params: Promise<{ skillId
           <div className="slate-label" style={{ color: skill.category.color }}>
             {skill.category.code} · {skill.category.name}
           </div>
-          <h1 className="font-display text-4xl">{skill.name}</h1>
+          <h1 className="font-display text-[2.1rem]">{skill.name}</h1>
           <div className="mt-1 font-mono text-xs text-faint">
             {skill.id} · v{skill.version}{" "}{t("· updated")}{" "}{fmt.date(skill.updatedAt)}
           </div>

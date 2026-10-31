@@ -31,13 +31,13 @@ export function DnaRadar({ data, compareLabel, height = 320 }: { data: DnaPoint[
     <div style={{ height }} className="w-full">
       <ResponsiveContainer width="100%" height="100%">
         <RadarChart data={rows} outerRadius="72%">
-          <PolarGrid stroke="#2A3142" />
+          <PolarGrid stroke="var(--color-line-strong)" />
           <PolarAngleAxis
             dataKey="category"
             tick={({ x, y, payload, textAnchor }) => {
               const d = rows.find((r) => r.category === payload.value)!;
               return (
-                <text x={x} y={y} textAnchor={textAnchor} fill={d.current === null ? "#6B7385" : "#C9CFDA"} fontSize={11}>
+                <text x={x} y={y} textAnchor={textAnchor} fill={d.current === null ? "var(--color-faint)" : "var(--color-text)"} fontSize={11}>
                   {d.code} · {payload.value}
                   {d.current === null ? " ·  —" : ""}
                 </text>
@@ -46,11 +46,11 @@ export function DnaRadar({ data, compareLabel, height = 320 }: { data: DnaPoint[
           />
           <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
           {compareLabel && (
-            <Radar name={compareLabel} dataKey="compareV" stroke="#E8B04B" fill="#E8B04B" fillOpacity={0.08} strokeDasharray="4 4" isAnimationActive />
+            <Radar name={compareLabel} dataKey="compareV" stroke="var(--color-amber-bright)" fill="var(--color-amber-bright)" fillOpacity={0.08} strokeDasharray="4 4" isAnimationActive />
           )}
-          <Radar name="Now" dataKey="currentV" stroke="#6E9BFF" fill="#6E9BFF" fillOpacity={0.22} isAnimationActive />
+          <Radar name="Now" dataKey="currentV" stroke="var(--color-accent)" fill="var(--color-accent)" fillOpacity={0.22} isAnimationActive />
           <Tooltip content={<TooltipBody />} />
-          {compareLabel && <Legend wrapperStyle={{ fontSize: 12, color: "#9BA4B5" }} />}
+          {compareLabel && <Legend wrapperStyle={{ fontSize: 12, color: "var(--color-faint)" }} />}
         </RadarChart>
       </ResponsiveContainer>
     </div>

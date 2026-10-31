@@ -38,7 +38,7 @@ export default async function AssessSkill({ params, searchParams }: { params: Pr
       <div className="slate-label mb-2" style={{ color: category.color }}>
         {category.code} · {category.name}
       </div>
-      <h1 className="font-display text-4xl md:text-5xl">{skill.name}</h1>
+      <h1 className="font-display text-[2.1rem] md:text-[2.6rem]">{skill.name}</h1>
       <p className="mt-3 text-muted leading-relaxed">{skill.description}</p>
       <Card className="mt-8 p-6">
         <AssessForm skillId={skillId} levels={skill.levels} projects={projects} next={next} current={history[0]?.level} />

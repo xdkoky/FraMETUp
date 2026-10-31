@@ -52,7 +52,7 @@ export function ReviewForm({
             <div className="mt-4 grid gap-1.5 sm:grid-cols-2">
               {OPTIONS.map(([value, label]) => (
                 <label key={value} className="flex cursor-pointer items-center gap-2 rounded-lg border border-line-soft px-3 py-2 text-[13px] text-muted has-[:checked]:border-accent has-[:checked]:bg-accent-soft has-[:checked]:text-text">
-                  <input type="radio" name={`obs:${s.id}`} value={value} required className="accent-[#6E9BFF]" />
+                  <input type="radio" name={`obs:${s.id}`} value={value} required className="accent-[var(--color-accent)]" />
                   {t(label)}
                 </label>
               ))}
@@ -76,7 +76,7 @@ export function ReviewForm({
           <Textarea id="overallComment" name="overallComment" rows={3} maxLength={3000} />
         </div>
         <label className="flex items-start gap-2 text-sm text-muted">
-          <input type="checkbox" name="anonymous" className="mt-1 accent-[#6E9BFF]" />
+          <input type="checkbox" name="anonymous" className="mt-1 accent-[var(--color-accent)]" />
           <span>
             {t("Hide my name from them.")}{" "}<span className="text-faint">{t("Your answers still count; only your identity is hidden.")}</span>
           </span>

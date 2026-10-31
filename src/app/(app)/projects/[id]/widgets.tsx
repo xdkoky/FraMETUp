@@ -203,7 +203,7 @@ export function EvidenceForm({ action, maxMb }: { action: Action; maxMb: number 
       </div>
       {mode !== "note" && (
         <label className="flex items-start gap-2 text-xs text-muted">
-          <input type="checkbox" name="rightsConfirmed" className="mt-0.5 accent-[#6E9BFF]" />
+          <input type="checkbox" name="rightsConfirmed" className="mt-0.5 accent-[var(--color-accent)]" />
           {t("I have the right to store and share this with the people I choose (actors, crew and music rights included).")}
         </label>
       )}

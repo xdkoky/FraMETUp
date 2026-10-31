@@ -1,5 +1,6 @@
 import {
   Activity,
+  Aperture,
   Clapperboard,
   Dna,
   GitBranch,
@@ -14,6 +15,7 @@ import {
 /** The everyday places — also the phone tab bar. */
 export const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", short: "Home", icon: LayoutDashboard },
+  { href: "/learn", label: "Learn", short: "Learn", icon: Aperture },
   { href: "/skills", label: "Skill Tree", short: "Tree", icon: GitBranch },
   { href: "/projects", label: "Projects", short: "Projects", icon: Clapperboard },
   { href: "/feedback", label: "Feedback", short: "Feedback", icon: MessagesSquare },

@@ -15,7 +15,7 @@ export default async function PrivacyPage() {
       <Link href="/">
         <Wordmark />
       </Link>
-      <h1 className="mt-8 font-display text-5xl text-text">{t("Privacy notice")}</h1>
+      <h1 className="mt-8 font-display text-[2.6rem] text-text">{t("Privacy notice")}</h1>
       <p className="mt-2 text-xs text-faint">{t("Template for the MVP — the operator must review it with their data protection officer before production use.")}</p>
       <h2 className="mt-8 text-lg font-semibold text-text">{t("Who runs this")}</h2>
       <p>{t("FraMETUp is an independent student development tool. It is not an official Budapest Metropolitan University (METU) system and does not access university records or grades.")}</p>

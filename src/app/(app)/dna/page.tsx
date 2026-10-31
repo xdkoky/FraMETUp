@@ -115,7 +115,7 @@ export default async function DnaPage({ searchParams }: { searchParams: Promise<
                   <span className="flex-1 truncate text-muted">{c.name}</span>
                   <div className="flex gap-0.5" aria-label={t("{a} of {b} skills assessed", { a: c.assessed, b: c.total })}>
                     {Array.from({ length: c.total }, (_, i) => (
-                      <span key={i} className="h-3 w-1.5 rounded-sm" style={{ background: i < c.assessed ? c.color : "#262D3C" }} />
+                      <span key={i} className="h-3 w-1.5 rounded-sm" style={{ background: i < c.assessed ? c.color : "var(--color-surface-3)" }} />
                     ))}
                   </div>
                 </div>

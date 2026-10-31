@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Clapperboard, Crosshair, MessagesSquare, NotebookPen, Plus, Sparkles, Target, TrendingUp } from "lucide-react";
+import { Aperture, ArrowRight, Clapperboard, Crosshair, Flame, MessagesSquare, NotebookPen, Plus, Sparkles, Target, TrendingUp } from "lucide-react";
 import { requireUser } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { getDevelopment } from "@/lib/services/development";
@@ -16,7 +16,9 @@ import { Page } from "@/components/shell/page";
 import { LinkButton } from "@/components/ui/button";
 import { Badge, Card, CardHeader, EmptyState, Meter } from "@/components/ui/misc";
 import { DnaRadar } from "@/components/charts/dna-radar";
-import { getFormat, getT } from "@/i18n/server";
+import { getFormat, getLocale, getT } from "@/i18n/server";
+import { getLearnProgress } from "@/lib/services/learn";
+import { ALL_LESSONS, pick } from "@/lib/learn";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT();
@@ -29,20 +31,42 @@ function greeting() {
   return h < 5 ? "Working late" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
 }
 
+async function LearnStrip({ userId }: { userId: string }) {
+  const t = await getT();
+  const locale = await getLocale();
+  const { done, streak, activeToday } = await getLearnProgress(userId);
+  const next = ALL_LESSONS.find((l) => !done.has(l.id));
+  const finished = ALL_LESSONS.length - ALL_LESSONS.filter((l) => !done.has(l.id)).length;
+  return (
+    <Link href={next ? `/lesson/${next.id}` : "/learn"} className="card mb-6 flex items-center gap-4 p-4">
+      <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-[#14A89A] text-white shadow-[0_4px_0_#0d7a70]">
+        <Aperture className="size-6" aria-hidden />
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="slate-label">{t("Cinematography track")} · {finished}/{ALL_LESSONS.length}</div>
+        <div className="truncate text-[15px] font-extrabold">{next ? `${finished ? t("Continue") : t("Start")}: ${pick(next.title, locale)}` : t("Back to the path")}</div>
+      </div>
+      <span className={`flex shrink-0 items-center gap-1 text-lg font-black ${activeToday ? "text-amber" : "text-faint"}`} title={t("day streak")}>
+        <Flame className={`size-6 ${activeToday ? "fill-amber-bright" : ""}`} aria-hidden /> {streak}
+      </span>
+    </Link>
+  );
+}
+
 type NextStep = { icon: "feedback" | "quiz" | "project" | "reflect" | "challenge"; eyebrow: string; title: string; body: string; href: string; cta: string };
 
 async function NextStepCard({ step }: { step: NextStep }) {
   const t = await getT();
   const Icon = { feedback: MessagesSquare, quiz: Sparkles, project: Clapperboard, reflect: NotebookPen, challenge: Target }[step.icon];
   return (
-    <section className="relative mb-6 overflow-hidden rounded-2xl border border-accent/25 bg-[radial-gradient(120%_140%_at_0%_0%,rgba(110,155,255,0.16),transparent_55%),var(--color-surface)] p-5 sm:p-6" aria-label={t("Next step")}>
+    <section className="relative mb-4 overflow-hidden rounded-[20px] border-2 border-accent/30 bg-[radial-gradient(120%_140%_at_0%_0%,rgba(47,124,246,0.1),transparent_55%),var(--color-surface)] p-5 shadow-[0_3px_0_rgba(47,124,246,0.3)] sm:p-6" aria-label={t("Next step")}>
       <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-        <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-accent text-ink shadow-[0_8px_30px_rgba(110,155,255,0.35)]">
+        <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-accent text-white shadow-[0_4px_0_var(--color-accent-strong)]">
           <Icon className="size-5" aria-hidden />
         </div>
         <div className="min-w-0 flex-1">
           <div className="slate-label !text-accent-strong">{step.eyebrow}</div>
-          <h2 className="mt-1 text-xl font-semibold leading-snug">{step.title}</h2>
+          <h2 className="mt-1 text-xl font-extrabold leading-snug">{step.title}</h2>
           <p className="mt-1 text-sm text-muted">{step.body}</p>
         </div>
         <LinkButton href={step.href} size="lg" className="shrink-0">
@@ -137,14 +161,14 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   return (
     <Page>
       {welcome && (
-        <div className="mb-6 rounded-xl border border-accent/30 bg-accent-soft p-4 text-sm text-accent-strong">
+        <div className="mb-6 rounded-2xl border-2 border-accent/30 bg-accent-soft p-4 text-sm text-accent-strong">
           <strong className="font-semibold">{t("You're set up.")}</strong>{" "}{t("Your tree starts mostly unassessed — that's expected. Add a project or a quick self-assessment and watch it change.")}
         </div>
       )}
       <header className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <div className="slate-label mb-2">{sem && user.enrollmentYear ? semesterLabel(user.enrollmentYear, sem, t) : t("Dashboard")}</div>
-          <h1 className="font-display text-4xl md:text-5xl leading-tight">
+          <h1 className="font-display text-[2.1rem] md:text-[2.6rem] leading-tight">
             {t("{greeting}, {name}.", { greeting: t(greeting()), name: user.displayName.split(" ")[0] })}
           </h1>
           <p className="mt-2 text-muted max-w-xl">
@@ -158,6 +182,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       </header>
 
       <NextStepCard step={next} />
+      <LearnStrip userId={user.id} />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
         {/* Development overview */}

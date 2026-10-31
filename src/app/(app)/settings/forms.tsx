@@ -36,7 +36,7 @@ export function PrivacyForm({
         </div>
       </div>
       <label className="flex items-start gap-3 text-sm">
-        <input type="checkbox" name="allowReviewRequests" defaultChecked={settings.allowReviewRequests} className="mt-1 accent-[#6E9BFF]" />
+        <input type="checkbox" name="allowReviewRequests" defaultChecked={settings.allowReviewRequests} className="mt-1 accent-[var(--color-accent)]" />
         <span>
           {t("Allow others to request my feedback")}
           <span className="block text-xs text-faint">{t("You can always decline individual requests without giving a reason.")}</span>
@@ -45,7 +45,7 @@ export function PrivacyForm({
 
       <div className="rounded-xl border border-line-soft bg-ink/40 p-4">
         <label className="flex items-start gap-3 text-sm">
-          <input type="checkbox" name="aiConsent" defaultChecked={settings.aiConsent} className="mt-1 accent-[#6E9BFF]" />
+          <input type="checkbox" name="aiConsent" defaultChecked={settings.aiConsent} className="mt-1 accent-[var(--color-accent)]" />
           <span>
             {t("Allow AI analysis of reflections I choose to analyse")}
             <span className="mt-1 block text-xs text-muted leading-relaxed">
