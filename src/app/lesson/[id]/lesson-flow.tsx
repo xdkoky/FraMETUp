@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { CheckCircle2, Clock, Flame, Lightbulb, SlidersHorizontal, Target, X, XCircle, Zap } from "lucide-react";
 import type { WidgetKind } from "@/lib/learn";
 import { LessonWidget } from "@/components/learn/widgets";
@@ -12,6 +13,8 @@ import { cn } from "@/lib/utils";
 import { useT } from "@/i18n/client";
 import { completeLesson } from "../actions";
 import { Character, characterFor, type Mood } from "@/components/characters/character";
+import { Confetti, CountUp } from "@/components/ui/celebrate";
+import { play } from "@/lib/sound";
 
 export interface LessonData {
   id: string;
@@ -60,14 +63,30 @@ export function LessonFlow({ data }: { data: LessonData }) {
   const POINT_MOODS: Mood[] = ["happy", "thinking", "excited", "determined"];
   const progress = Math.min(1, at / (steps.length - 1));
   const advance = () => setAt((n) => Math.min(steps.length - 1, n + 1));
+  const reduce = useReducedMotion();
+  const [combo, setCombo] = useState(0);
+
+  // Fanfare when the lesson is finished; a streak chime once the server confirms it.
+  useEffect(() => {
+    if (step.kind === "done") play("complete");
+  }, [step.kind]);
+  useEffect(() => {
+    if (step.kind === "done" && result && result.xp > 0) {
+      const id = setTimeout(() => play("streak"), 1300);
+      return () => clearTimeout(id);
+    }
+  }, [step.kind, result]);
 
   const check = () => {
     if (picked === null) return;
     if (picked !== data.answer) {
+      play("wrong");
       setVerdict("wrong");
       setShake((n) => n + 1);
       return;
     }
+    play("correct");
+    setCombo((n) => n + 1);
     setVerdict("right");
     start(async () => {
       const res = await completeLesson(data.id, picked);
@@ -103,7 +122,7 @@ export function LessonFlow({ data }: { data: LessonData }) {
         );
       return (
         <Bar>
-          <button type="button" onClick={check} disabled={picked === null} className={cn(buttonClass("primary", "lg"), "min-w-40")}>
+          <button type="button" data-sound="none" onClick={check} disabled={picked === null} className={cn(buttonClass("primary", "lg"), "min-w-40")}>
             {t("Check")}
           </button>
         </Bar>
@@ -125,15 +144,25 @@ export function LessonFlow({ data }: { data: LessonData }) {
           <X className="size-7" strokeWidth={2.5} />
         </Link>
         <div className="h-4 flex-1 overflow-hidden rounded-full bg-surface-3" role="progressbar" aria-label={t("Lesson progress")} aria-valuenow={Math.round(progress * 100)} aria-valuemin={0} aria-valuemax={100}>
-          <div className="relative h-full rounded-full bg-success-bright transition-[width] duration-500 ease-out" style={{ width: `${Math.max(4, progress * 100)}%` }}>
+          <div className="relative h-full rounded-full bg-success-bright transition-[width] duration-700 ease-[cubic-bezier(.22,1,.36,1)]" style={{ width: `${Math.max(4, progress * 100)}%` }}>
             <span className="absolute inset-x-2 top-1 h-1 rounded-full bg-white/35" aria-hidden />
+            {combo > 0 && <span key={combo} className="absolute inset-0 rounded-full animate-[bar-flash_.8s_ease-out]" aria-hidden />}
           </div>
         </div>
       </header>
 
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 pb-40 pt-8 sm:px-6">
+      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col overflow-x-clip px-4 pb-40 pt-8 sm:px-6">
+       <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={at}
+          className="flex flex-1 flex-col"
+          initial={reduce ? { opacity: 0 } : { opacity: 0, x: 48, scale: 0.98 }}
+          animate={{ opacity: 1, x: 0, scale: 1 }}
+          exit={reduce ? { opacity: 0 } : { opacity: 0, x: -48, scale: 0.98 }}
+          transition={{ type: "spring", stiffness: 420, damping: 36, mass: 0.8 }}
+        >
         {step.kind === "intro" && (
-          <div className="my-auto flex flex-col-reverse gap-6 animate-[pop_.35s_ease-out] sm:flex-row sm:items-center">
+          <div className="my-auto flex flex-col-reverse gap-6 sm:flex-row sm:items-center">
             <div className="min-w-0 flex-1">
             <div className="mb-4 inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-[12px] font-extrabold uppercase tracking-wide text-white" style={{ background: data.color, boxShadow: `0 3px 0 ${darker(data.color)}` }}>
               {t("Unit {n}", { n: data.unit })} · {data.unitTitle}
@@ -169,7 +198,7 @@ export function LessonFlow({ data }: { data: LessonData }) {
         )}
 
         {step.kind === "point" && (
-          <div key={step.i} className="my-auto animate-[pop_.3s_ease-out]">
+          <div key={step.i} className="my-auto">
             <div className="slate-label mb-4" style={{ color: data.color }}>
               {t("Key idea {a} of {b}", { a: step.i + 1, b: data.points.length })}
             </div>
@@ -220,7 +249,7 @@ export function LessonFlow({ data }: { data: LessonData }) {
         )}
 
         {step.kind === "drill" && (
-          <div className="my-auto animate-[pop_.3s_ease-out]">
+          <div className="my-auto">
             <div className="slate-label mb-2" style={{ color: data.color }}>
               {t("Your drill")}
             </div>
@@ -243,7 +272,12 @@ export function LessonFlow({ data }: { data: LessonData }) {
               {t("Quick check")}
             </div>
             <div className="mb-6 flex items-end gap-3">
-              <Character who={who} mood={verdict === "right" ? "excited" : verdict === "wrong" ? "worried" : "thinking"} className="size-20 shrink-0 sm:size-28" />
+              <Character
+                key={verdict ?? "idle"}
+                who={who}
+                mood={verdict === "right" ? "excited" : verdict === "wrong" ? "worried" : "thinking"}
+                className={cn("size-20 shrink-0 sm:size-28", verdict === "right" && "animate-[hop_.6s_cubic-bezier(.22,1,.36,1)]", verdict === "wrong" && "animate-[wobble_.5s_ease-in-out]")}
+              />
               <div className="relative mb-3 flex-1 rounded-3xl border-2 border-line bg-surface px-5 py-4 shadow-[0_4px_0_var(--color-line)]">
                 <span className="absolute -left-[11px] bottom-5 size-5 rotate-45 border-b-2 border-l-2 border-line bg-surface" aria-hidden />
                 <h2 className="relative text-xl font-black leading-snug sm:text-2xl">{data.question}</h2>
@@ -255,9 +289,13 @@ export function LessonFlow({ data }: { data: LessonData }) {
                 const right = verdict === "right" && i === data.answer;
                 const wrong = verdict === "wrong" && sel;
                 return (
-                  <button
+                  <motion.button
                     key={i}
                     type="button"
+                    data-sound="select"
+                    initial={reduce || shake > 0 ? false : { opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0, scale: right ? [1, 1.05, 1] : sel ? [1, 1.025, 1] : 1 }}
+                    transition={{ opacity: { delay: i * 0.05 }, y: { delay: i * 0.05, type: "spring", stiffness: 500, damping: 30 }, scale: { duration: 0.3 } }}
                     role="radio"
                     aria-checked={sel}
                     disabled={verdict === "right"}
@@ -278,7 +316,7 @@ export function LessonFlow({ data }: { data: LessonData }) {
                   >
                     <span className={cn("grid size-7 shrink-0 place-items-center rounded-lg border-2 text-[13px] font-black", sel || right ? "border-current" : "border-line text-faint")}>{i + 1}</span>
                     {o}
-                  </button>
+                  </motion.button>
                 );
               })}
             </div>
@@ -288,6 +326,7 @@ export function LessonFlow({ data }: { data: LessonData }) {
         {step.kind === "done" && (
           <div className="my-auto flex flex-col items-center text-center animate-[pop_.4s_ease-out]">
             <div className="relative">
+              <Confetti />
               <Character who={who} mood="excited" className="size-40 animate-[bounce-soft_1.4s_ease-in-out_infinite] sm:size-48" />
               <span className="absolute -left-6 top-2 text-3xl" aria-hidden>
                 ✨
@@ -296,12 +335,19 @@ export function LessonFlow({ data }: { data: LessonData }) {
                 🎬
               </span>
             </div>
-            <h1 className="mt-4 font-display text-[2.3rem] font-black text-amber">{t("Lesson complete!")}</h1>
+            <motion.h1
+              className="mt-4 font-display text-[2.3rem] font-black text-amber"
+              initial={reduce ? false : { scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 380, damping: 14, delay: 0.15 }}
+            >
+              {t("Lesson complete!")}
+            </motion.h1>
             <p className="mt-1 font-semibold text-muted">{data.title}</p>
             <div className="mt-8 grid w-full max-w-md grid-cols-3 gap-3">
-              <Stat icon={<Zap className="size-5 fill-white" aria-hidden />} color="var(--color-amber-bright)" label={t("XP earned")} value={result ? `+${result.xp}` : "…"} />
-              <Stat icon={<Flame className="size-5 fill-white" aria-hidden />} color="#F27522" label={t("Day streak")} value={result ? String(result.streak) : "…"} />
-              <Stat icon={<Target className="size-5" aria-hidden />} color="var(--color-success-bright)" label={t("Daily goal")} value={result ? `${Math.min(result.todayXp, data.dailyGoal)}/${data.dailyGoal}` : "…"} />
+              <Stat i={0} icon={<Zap className="size-5 fill-white" aria-hidden />} color="var(--color-amber-bright)" label={t("XP earned")} value={result ? <CountUp value={result.xp} prefix="+" sound delay={0.55} /> : "…"} />
+              <Stat i={1} icon={<Flame className="size-5 fill-white" aria-hidden />} color="#F27522" label={t("Day streak")} value={result ? <CountUp value={result.streak} delay={0.7} /> : "…"} />
+              <Stat i={2} icon={<Target className="size-5" aria-hidden />} color="var(--color-success-bright)" label={t("Daily goal")} value={result ? <><CountUp value={Math.min(result.todayXp, data.dailyGoal)} delay={0.85} />/{data.dailyGoal}</> : "…"} />
             </div>
             {result && result.xp === 0 && data.alreadyDone && <p className="mt-4 text-[13px] font-semibold text-faint">{t("You already finished this lesson, so there is no new XP — but practice never hurts.")}</p>}
             <div className="mt-10 flex w-full max-w-md flex-col gap-3">
@@ -319,9 +365,24 @@ export function LessonFlow({ data }: { data: LessonData }) {
             </div>
           </div>
         )}
+        </motion.div>
+       </AnimatePresence>
       </main>
 
-      {footer}
+      <AnimatePresence mode="popLayout" initial={false}>
+        {footer && (
+          <motion.div
+            key={step.kind === "check" ? `check-${verdict ?? "idle"}` : "bar"}
+            initial={verdict && step.kind === "check" && !reduce ? { y: "100%" } : { opacity: 1 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ opacity: 1 }}
+            transition={{ type: "spring", stiffness: 520, damping: 34 }}
+            className="fixed inset-x-0 bottom-0 z-30"
+          >
+            {footer}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -330,7 +391,7 @@ function Bar({ tone, title, body, children }: { tone?: "right" | "wrong"; title?
   return (
     <div
       className={cn(
-        "fixed inset-x-0 bottom-0 border-t-2 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4",
+        "border-t-2 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4",
         tone === "right" ? "border-transparent bg-[var(--color-success-wash)]" : tone === "wrong" ? "border-transparent bg-[var(--color-danger-wash)]" : "border-line bg-surface",
       )}
       aria-live="polite"
@@ -353,15 +414,22 @@ function Bar({ tone, title, body, children }: { tone?: "right" | "wrong"; title?
   );
 }
 
-function Stat({ icon, color, label, value }: { icon: React.ReactNode; color: string; label: string; value: string }) {
+function Stat({ i, icon, color, label, value }: { i: number; icon: React.ReactNode; color: string; label: string; value: React.ReactNode }) {
+  const reduce = useReducedMotion();
   return (
-    <div className="overflow-hidden rounded-2xl border-2" style={{ borderColor: color }}>
+    <motion.div
+      className="overflow-hidden rounded-2xl border-2"
+      style={{ borderColor: color }}
+      initial={reduce ? false : { y: 24, opacity: 0, scale: 0.85 }}
+      animate={{ y: 0, opacity: 1, scale: 1 }}
+      transition={{ type: "spring", stiffness: 420, damping: 22, delay: 0.4 + i * 0.12 }}
+    >
       <div className="flex items-center justify-center gap-1 py-1 text-[11px] font-extrabold uppercase tracking-wide text-white" style={{ background: color }}>
         {icon} {label}
       </div>
       <div className="py-3 text-2xl font-black" style={{ color }}>
         {value}
       </div>
-    </div>
+    </motion.div>
   );
 }

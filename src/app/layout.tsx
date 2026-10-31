@@ -6,6 +6,7 @@ import { getLocale, getT } from "@/i18n/server";
 import { I18nProvider } from "@/i18n/client";
 import { DICTIONARIES } from "@/i18n/dictionaries";
 import { getThemePref } from "@/lib/theme";
+import { UiSounds } from "@/components/shell/ui-sounds";
 
 const nunito = Nunito({ subsets: ["latin", "latin-ext"], weight: ["500", "600", "700", "800", "900"], variable: "--font-nunito", display: "swap" });
 const mono = JetBrains_Mono({ subsets: ["latin", "latin-ext"], variable: "--font-mono", display: "swap" });
@@ -37,6 +38,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang={locale} className={`${nunito.variable} ${mono.variable}${theme === "auto" ? "" : ` ${theme}`}`} suppressHydrationWarning>
       <body className="min-h-dvh">
+        <UiSounds />
         <I18nProvider locale={locale} dict={DICTIONARIES[locale]}>
           <div className="relative z-10">{children}</div>
         </I18nProvider>

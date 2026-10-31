@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { NAV_ITEMS } from "./nav-items";
+import { play } from "@/lib/sound";
 
 /** Which way the next page should slide in. Set by tab taps and swipes; read once by the next page. */
 let pendingDirection: "left" | "right" | null = null;
@@ -31,7 +32,7 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
     last.current = pathname;
   }
   const anim =
-    dir.current === "right" ? "animate-[slide-in-right_.24s_ease-out]" : dir.current === "left" ? "animate-[slide-in-left_.24s_ease-out]" : "animate-[pagein_.2s_ease-out]";
+    dir.current === "right" ? "animate-[slide-in-right_.32s_cubic-bezier(.22,1,.36,1)]" : dir.current === "left" ? "animate-[slide-in-left_.32s_cubic-bezier(.22,1,.36,1)]" : "animate-[pagein_.28s_cubic-bezier(.22,1,.36,1)]";
   return (
     <div key={pathname} className={`${anim} motion-reduce:animate-none`}>
       {children}
@@ -81,6 +82,7 @@ export function SwipeNav() {
       const next = TAB_HREFS[dx < 0 ? i + 1 : i - 1];
       if (!next) return;
       prepareTabMove(pathRef.current, next);
+      play("swoosh");
       router.push(next);
     };
     document.addEventListener("touchstart", onStart, { passive: true });
