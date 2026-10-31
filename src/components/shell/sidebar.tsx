@@ -26,7 +26,7 @@ function Logo() {
 
 type Item = { href: string; label: string; icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean }> };
 
-export function Sidebar({ isAdmin, displayName, pendingReviews, theme }: { isAdmin: boolean; displayName: string; pendingReviews: number; theme: ThemePref }) {
+export function Sidebar({ isAdmin, isStaff, displayName, pendingReviews, theme }: { isAdmin: boolean; isStaff: boolean; displayName: string; pendingReviews: number; theme: ThemePref }) {
   const t = useT();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -59,7 +59,7 @@ export function Sidebar({ isAdmin, displayName, pendingReviews, theme }: { isAdm
       <div className="slate-label mb-1 mt-5 px-3">{t("Growth")}</div>
       {GROWTH_NAV.map(link)}
       <div className="my-4 h-px bg-line-soft" />
-      {SECONDARY_NAV.filter((i) => !("adminOnly" in i) || isAdmin).map(link)}
+      {SECONDARY_NAV.filter((i) => ("adminOnly" in i ? isAdmin : "staffOnly" in i ? isStaff : true)).map(link)}
     </nav>
   );
 

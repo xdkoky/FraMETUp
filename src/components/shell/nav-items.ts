@@ -1,6 +1,7 @@
 import {
   Activity,
   Aperture,
+  Camera,
   Clapperboard,
   Dna,
   GitBranch,
@@ -31,5 +32,6 @@ export const GROWTH_NAV = [
 export const SECONDARY_NAV = [
   { href: "/profile", label: "Profile", icon: UserRound },
   { href: "/settings", label: "Settings & privacy", icon: Settings2 },
+  { href: "/learn/curate", label: "Lesson photo shot list", icon: Camera, staffOnly: true },
   { href: "/admin/taxonomy", label: "Taxonomy admin", icon: Wrench, adminOnly: true },
 ] as const;

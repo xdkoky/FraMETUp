@@ -8,6 +8,7 @@ import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import { createSession, destroySession, getCurrentUser } from "@/lib/auth/session";
 import { rateLimit } from "@/lib/rate-limit";
 import { audit } from "@/lib/services/audit";
+import { syncStaffRoles } from "@/lib/services/staff";
 
 export type AuthState = { error?: string; fieldErrors?: Record<string, string[]> } | null;
 
@@ -51,6 +52,7 @@ export async function registerAction(_: AuthState, formData: FormData): Promise<
     },
   });
   await audit(user.id, "auth.register", "User", user.id);
+  await syncStaffRoles(user.id, email);
   await createSession(user.id);
   redirect("/onboarding");
 }
@@ -76,6 +78,7 @@ export async function loginAction(_: AuthState, formData: FormData): Promise<Aut
     if (user) await audit(user.id, "auth.login_failed", "User", user.id);
     return { error: "That email and password don't match." };
   }
+  await syncStaffRoles(user.id, email);
   await createSession(user.id);
   await audit(user.id, "auth.login", "User", user.id);
   const next = String(formData.get("next") ?? "");
