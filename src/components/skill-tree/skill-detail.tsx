@@ -227,7 +227,7 @@ export function SkillDetail({ skill, category, status, prerequisites, enables, r
                       <span
                         className={cn(
                           "grid size-6 shrink-0 place-items-center rounded-full border font-mono text-[11px]",
-                          d.today ? "border-accent bg-accent text-ink" : "border-line text-faint",
+                          d.today ? "border-accent bg-accent text-white" : "border-line text-faint",
                         )}
                         aria-hidden
                       >

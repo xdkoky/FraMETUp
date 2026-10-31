@@ -5,7 +5,7 @@ import { recomputeMastery } from "./mastery";
 
 /** Everything stored about a user, for GDPR data portability. */
 export async function exportUserData(userId: string) {
-  const [user, projects, selfAssessments, reviewsReceived, reviewsWritten, requests, reflections, goals, xp, snapshots, ai, challenges, notifications] = await Promise.all([
+  const [user, projects, selfAssessments, reviewsReceived, reviewsWritten, requests, reflections, goals, xp, snapshots, ai, challenges, notifications, lessonMedia] = await Promise.all([
     db.user.findUniqueOrThrow({ where: { id: userId }, select: { id: true, email: true, createdAt: true, profile: true, privacy: true, roles: { include: { role: true } }, memberships: { include: { cohort: true } } } }),
     db.project.findMany({ where: { ownerId: userId }, include: { collaborators: true, evidence: true, skillLinks: true } }),
     db.selfAssessment.findMany({ where: { userId } }),
@@ -19,6 +19,7 @@ export async function exportUserData(userId: string) {
     db.aIAssessment.findMany({ where: { userId }, include: { suggestions: true } }),
     db.challengeCompletion.findMany({ where: { userId } }),
     db.notification.findMany({ where: { userId } }),
+    db.lessonMedia.findMany({ where: { uploaderId: userId, deletedAt: null }, select: { id: true, lessonId: true, kind: true, visibility: true, caption: true, credit: true, license: true, sourceUrl: true, createdAt: true } }),
   ]);
   // Anonymous reviewers stay anonymous in the export.
   const received = reviewsReceived.map((r) => (r.anonymousToSubject ? { ...r, reviewerId: "anonymous" } : r));
@@ -39,12 +40,14 @@ export async function exportUserData(userId: string) {
     aiAssessments: ai,
     challengeCompletions: challenges,
     notifications,
+    lessonPhotos: lessonMedia,
   };
 }
 
 /** Permanently erases a user and their content (right to erasure). */
 export async function deleteAccount(userId: string) {
   const files = await db.projectEvidence.findMany({ where: { project: { ownerId: userId }, storageKey: { not: null } }, select: { storageKey: true } });
+  const photos = await db.lessonMedia.findMany({ where: { uploaderId: userId }, select: { storageKey: true, afterStorageKey: true } });
   const affectedSubjects = await db.peerReview.findMany({ where: { reviewerId: userId }, select: { subjectId: true } });
 
   await db.$transaction(async (tx) => {
@@ -66,6 +69,7 @@ export async function deleteAccount(userId: string) {
     await tx.auditLog.create({ data: { action: "account.delete", targetType: "User", targetId: userId } });
   });
   for (const f of files) if (f.storageKey) await deleteUpload(f.storageKey);
+  for (const p of photos) for (const key of [p.storageKey, p.afterStorageKey]) if (key) await deleteUpload(key);
   // Other students' estimates no longer include the deleted reviewer's feedback.
   for (const s of new Set(affectedSubjects.map((a) => a.subjectId))) await recomputeMastery(s);
 }

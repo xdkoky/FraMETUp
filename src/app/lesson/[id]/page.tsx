@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth/session";
 import { getLearnProgress } from "@/lib/services/learn";
-import { COURSE, LESSON_BY_ID, nextLesson, pick } from "@/lib/learn";
+import { LESSON_BY_ID, REFERENCES, nextLesson, pick } from "@/lib/learn";
+import { getLessonPhotos } from "@/lib/services/lesson-media";
 import { DAILY_GOAL } from "@/lib/learn/progress";
 import { getTaxonomy } from "@/lib/services/taxonomy";
 import { unitColor } from "@/components/learn/palette";
@@ -21,9 +22,8 @@ export default async function LessonPage({ params }: { params: Promise<{ id: str
   if (!entry) notFound();
   const user = await requireUser();
   const locale = await getLocale();
-  const [{ done }, { skillById }] = await Promise.all([getLearnProgress(user.id), getTaxonomy()]);
-  const { lesson, module } = entry;
-  const unit = COURSE.indexOf(module);
+  const [{ done }, { skillById }, photos] = await Promise.all([getLearnProgress(user.id), getTaxonomy(), getLessonPhotos(user, id)]);
+  const { lesson, module, track, unit } = entry;
   const following = nextLesson(id);
   const L = (s: { en: string; hu: string }) => pick(s, locale);
 
@@ -48,6 +48,11 @@ export default async function LessonPage({ params }: { params: Promise<{ id: str
         alreadyDone: done.has(lesson.id),
         next: following ? { id: following.id, title: L(following.title) } : null,
         dailyGoal: DAILY_GOAL,
+        track: track.id,
+        references: [
+          ...(REFERENCES[id] ?? []).map((r) => ({ src: r.src, afterSrc: null, beforeLabel: null, afterLabel: null, caption: L(r.caption), credit: r.credit, license: r.license, sourceUrl: r.sourceUrl })),
+          ...photos.references.map((p) => ({ src: p.src, afterSrc: p.afterSrc, beforeLabel: p.beforeLabel, afterLabel: p.afterLabel, caption: p.caption, credit: p.credit, license: p.license, sourceUrl: p.sourceUrl })),
+        ],
       }}
     />
   );

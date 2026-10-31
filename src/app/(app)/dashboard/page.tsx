@@ -18,7 +18,7 @@ import { Badge, Card, CardHeader, EmptyState, Meter } from "@/components/ui/misc
 import { DnaRadar } from "@/components/charts/dna-radar";
 import { getFormat, getLocale, getT } from "@/i18n/server";
 import { getLearnProgress } from "@/lib/services/learn";
-import { ALL_LESSONS, pick } from "@/lib/learn";
+import { ALL_LESSONS, LESSON_BY_ID, pick } from "@/lib/learn";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT();
@@ -43,7 +43,7 @@ async function LearnStrip({ userId }: { userId: string }) {
         <Aperture className="size-6" aria-hidden />
       </span>
       <div className="min-w-0 flex-1">
-        <div className="slate-label">{t("Cinematography track")} · {finished}/{ALL_LESSONS.length}</div>
+        <div className="slate-label">{next ? pick(LESSON_BY_ID[next.id].track.title, locale) : t("Learn")} · {finished}/{ALL_LESSONS.length}</div>
         <div className="truncate text-[15px] font-extrabold">{next ? `${finished ? t("Continue") : t("Start")}: ${pick(next.title, locale)}` : t("Back to the path")}</div>
       </div>
       <span className={`flex shrink-0 items-center gap-1 text-lg font-black ${activeToday ? "text-amber" : "text-faint"}`} title={t("day streak")}>

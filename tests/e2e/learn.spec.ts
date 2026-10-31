@@ -8,8 +8,10 @@ test.beforeEach(async ({ context, baseURL }) => {
 test("a cinematography lesson can be completed from the learning path", async ({ page }) => {
   await signIn(page, "bence@frametup.local", "frametup-demo");
   await page.goto("/learn");
+  await expect(page.getByRole("heading", { name: "Learn to direct" })).toBeVisible();
+  await page.getByRole("tab", { name: "Cinematography" }).click();
   await expect(page.getByRole("heading", { name: "Learn the DoP's craft" })).toBeVisible();
-  await page.getByRole("link", { name: /^Frame rate/ }).click();
+  await page.getByRole("link", { name: /^Frame rate/ }).first().click();
   await expect(page).toHaveURL(/\/lesson\/camera\.framerate/);
 
   // Intro → four key ideas → drill → check
@@ -32,4 +34,21 @@ test("a cinematography lesson can be completed from the learning path", async ({
   // Back on the path the lesson is marked done
   await page.getByRole("link", { name: "Back to the path" }).click();
   await expect(page.getByRole("link", { name: "Frame rate — completed" })).toBeVisible();
+
+  // The lesson guide page: photos, drill upload and outside guides
+  await page.goto("/learn/camera.shutter");
+  await expect(page.getByRole("heading", { name: "See it for real" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Go deeper" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Shutter Angle in Cinematography Explained/ })).toHaveAttribute("href", "https://www.indepthcine.com/videos/shutter-angle");
+
+  // Upload a drill result (private by default)
+  const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
+  const drill = page.locator("form").filter({ hasText: "Add your drill result" });
+  await drill.locator('input[name="file"]').setInputFiles({ name: "drill.png", mimeType: "image/png", buffer: png });
+  await drill.getByLabel(/Caption/).fill("Same action at 180° and 45° shutter");
+  await drill.getByLabel(/I took this picture/).check();
+  await drill.getByRole("button", { name: "Upload" }).click();
+  await expect(page.getByText("Photo added.")).toBeVisible();
+  await expect(page.getByRole("img", { name: "Same action at 180° and 45° shutter" })).toBeVisible();
+  await expect(page.getByText("Only you can see this")).toBeVisible();
 });

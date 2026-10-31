@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   canAdministerTaxonomy,
+  canCurateLessonMedia,
+  canManageLessonMedia,
+  canViewLessonMedia,
   canEditProject,
   canRespondToRequest,
   canSeeReviewerIdentity,
@@ -101,5 +104,41 @@ describe("reflections and development data", () => {
   it("taxonomy administration requires ADMIN", () => {
     expect(canAdministerTaxonomy(admin)).toBe(true);
     expect(canAdministerTaxonomy(owner)).toBe(false);
+  });
+});
+
+describe("lesson photos", () => {
+  const student = { id: "s1", roles: ["STUDENT"], cohortIds: ["c1"] };
+  const classmate = { id: "s2", roles: ["STUDENT"], cohortIds: ["c1"] };
+  const stranger = { id: "s3", roles: ["STUDENT"], cohortIds: ["c9"] };
+  const teacher = { id: "t1", roles: ["INSTRUCTOR"], cohortIds: [] };
+  const example = { kind: "EXAMPLE" as const, visibility: "PRIVATE" as const, uploaderId: "s1", deletedAt: null, uploaderCohortIds: ["c1"] };
+
+  it("keeps private examples to the uploader", () => {
+    expect(canViewLessonMedia(student, example)).toBe(true);
+    expect(canViewLessonMedia(classmate, example)).toBe(false);
+    expect(canViewLessonMedia(teacher, example)).toBe(false);
+  });
+
+  it("shows shared examples to classmates and staff only", () => {
+    const shared = { ...example, visibility: "SHARED" as const };
+    expect(canViewLessonMedia(classmate, shared)).toBe(true);
+    expect(canViewLessonMedia(teacher, shared)).toBe(true);
+    expect(canViewLessonMedia(stranger, shared)).toBe(false);
+  });
+
+  it("shows references to everyone and hides deleted pictures", () => {
+    const ref = { ...example, kind: "REFERENCE" as const, uploaderId: "t1" };
+    expect(canViewLessonMedia(stranger, ref)).toBe(true);
+    expect(canViewLessonMedia(student, { ...example, deletedAt: new Date() })).toBe(false);
+  });
+
+  it("lets only staff curate, and staff moderate only what they can see", () => {
+    expect(canCurateLessonMedia(teacher)).toBe(true);
+    expect(canCurateLessonMedia(student)).toBe(false);
+    expect(canManageLessonMedia(student, example)).toBe(true);
+    expect(canManageLessonMedia(classmate, example)).toBe(false);
+    expect(canManageLessonMedia(teacher, example)).toBe(false);
+    expect(canManageLessonMedia(teacher, { ...example, visibility: "SHARED" })).toBe(true);
   });
 });

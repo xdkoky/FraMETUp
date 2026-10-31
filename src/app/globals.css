@@ -26,6 +26,8 @@
   --color-success: #26a65b;
   --color-success-bright: #3ccb73;
   --color-success-strong: #1f8a4b;
+  --color-success-wash: #d7ffe6;
+  --color-danger-wash: #ffe1e1;
 
   --font-sans: var(--font-nunito), ui-rounded, system-ui, sans-serif;
   --font-display: var(--font-nunito), ui-rounded, system-ui, sans-serif;
@@ -37,6 +39,60 @@
 
 :root {
   color-scheme: light;
+}
+
+/* ── Dark mode ──
+   "dark" class = always dark; "light" class = always light; no class = Auto, which follows the
+   device (phones on automatic appearance switch to dark at night). */
+html.dark {
+  color-scheme: dark;
+  --color-ink: #121820;
+  --color-surface: #19212b;
+  --color-surface-2: #212b37;
+  --color-surface-3: #2b3644;
+  --color-line: #2c3846;
+  --color-line-soft: #232d3a;
+  --color-line-strong: #3a4757;
+  --color-text: #eef2f6;
+  --color-muted: #aab4c1;
+  --color-faint: #7f8b9b;
+  --color-accent: #4c8dff;
+  --color-accent-strong: #2c66d1;
+  --color-accent-soft: rgb(76 141 255 / 0.16);
+  --color-amber: #f5b13d;
+  --color-amber-soft: rgb(255 176 32 / 0.14);
+  --color-danger: #ff6b70;
+  --color-danger-strong: #c43a3f;
+  --color-success: #3fd17d;
+  --color-success-strong: #6fe3a1;
+  --color-success-wash: #123524;
+  --color-danger-wash: #3a1719;
+}
+@media (prefers-color-scheme: dark) {
+  html:not(.light) {
+    color-scheme: dark;
+    --color-ink: #121820;
+    --color-surface: #19212b;
+    --color-surface-2: #212b37;
+    --color-surface-3: #2b3644;
+    --color-line: #2c3846;
+    --color-line-soft: #232d3a;
+    --color-line-strong: #3a4757;
+    --color-text: #eef2f6;
+    --color-muted: #aab4c1;
+    --color-faint: #7f8b9b;
+    --color-accent: #4c8dff;
+    --color-accent-strong: #2c66d1;
+    --color-accent-soft: rgb(76 141 255 / 0.16);
+    --color-amber: #f5b13d;
+    --color-amber-soft: rgb(255 176 32 / 0.14);
+    --color-danger: #ff6b70;
+    --color-danger-strong: #c43a3f;
+    --color-success: #3fd17d;
+    --color-success-strong: #6fe3a1;
+    --color-success-wash: #123524;
+    --color-danger-wash: #3a1719;
+  }
 }
 
 html,
@@ -109,6 +165,25 @@ a.card:active {
 .press:active:not(:disabled) {
   transform: translateY(4px);
   box-shadow: none !important;
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0.4; transform: translateX(36px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes slide-in-left {
+  from { opacity: 0.4; transform: translateX(-36px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Feel like an app when launched from the home screen. */
+html {
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+@media (display-mode: standalone) {
+  body { -webkit-user-select: none; user-select: none; }
+  input, textarea, [contenteditable] { -webkit-user-select: text; user-select: text; }
 }
 
 @keyframes pop {

@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { CheckCircle2, Clock, Flame, Lightbulb, SlidersHorizontal, Target, X, XCircle, Zap } from "lucide-react";
 import type { WidgetKind } from "@/lib/learn";
 import { LessonWidget } from "@/components/learn/widgets";
+import { CompareSlider } from "@/components/learn/media";
 import { darker } from "@/components/learn/palette";
 import { buttonClass } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -31,9 +32,11 @@ export interface LessonData {
   alreadyDone: boolean;
   next: { id: string; title: string } | null;
   dailyGoal: number;
+  track: string;
+  references: { src: string; afterSrc: string | null; beforeLabel: string | null; afterLabel: string | null; caption: string; credit: string; license: string; sourceUrl: string | null }[];
 }
 
-type Step = { kind: "intro" } | { kind: "point"; i: number } | { kind: "widget" } | { kind: "drill" } | { kind: "check" } | { kind: "done" };
+type Step = { kind: "intro" } | { kind: "point"; i: number } | { kind: "widget" } | { kind: "photos" } | { kind: "drill" } | { kind: "check" } | { kind: "done" };
 
 export function LessonFlow({ data }: { data: LessonData }) {
   const t = useT();
@@ -41,6 +44,7 @@ export function LessonFlow({ data }: { data: LessonData }) {
     { kind: "intro" },
     ...data.points.map((_, i) => ({ kind: "point" as const, i })),
     ...(data.widget ? [{ kind: "widget" as const }] : []),
+    ...(data.references.length ? [{ kind: "photos" as const }] : []),
     { kind: "drill" },
     { kind: "check" },
     { kind: "done" },
@@ -116,8 +120,8 @@ export function LessonFlow({ data }: { data: LessonData }) {
 
   return (
     <div className="flex min-h-dvh flex-col bg-surface">
-      <header className="mx-auto flex w-full max-w-3xl items-center gap-4 px-4 pt-5 sm:px-6">
-        <Link href="/learn" className="rounded-xl p-1.5 text-faint hover:bg-surface-2 hover:text-muted" aria-label={t("Close lesson")}>
+      <header className="mx-auto flex w-full max-w-3xl items-center gap-4 px-5 pt-[max(1.25rem,env(safe-area-inset-top))] sm:px-6">
+        <Link href={`/learn?track=${data.track}`} className="rounded-xl p-1.5 text-faint hover:bg-surface-2 hover:text-muted" aria-label={t("Close lesson")}>
           <X className="size-7" strokeWidth={2.5} />
         </Link>
         <div className="h-4 flex-1 overflow-hidden rounded-full bg-surface-3" role="progressbar" aria-label={t("Lesson progress")} aria-valuenow={Math.round(progress * 100)} aria-valuemin={0} aria-valuemax={100}>
@@ -186,6 +190,32 @@ export function LessonFlow({ data }: { data: LessonData }) {
             </div>
             <h2 className="mb-5 text-2xl font-black">{t("Play with the controls and watch what changes.")}</h2>
             <LessonWidget kind={data.widget} />
+          </div>
+        )}
+
+        {step.kind === "photos" && (
+          <div className="animate-[pop_.3s_ease-out]">
+            <div className="slate-label mb-2" style={{ color: data.color }}>
+              {t("See it for real")}
+            </div>
+            <div className="grid gap-6">
+              {data.references.slice(0, 3).map((r) => (
+                <figure key={r.src} className="space-y-2">
+                  {r.afterSrc ? (
+                    <CompareSlider before={r.src} after={r.afterSrc} beforeLabel={r.beforeLabel} afterLabel={r.afterLabel} alt={r.caption} />
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={r.src} alt={r.caption} className="w-full rounded-2xl border-2 border-line" />
+                  )}
+                  <figcaption>
+                    <p className="text-[15px] font-bold">{r.caption}</p>
+                    <p className="text-[11.5px] font-semibold text-faint">
+                      {t("Photo:")} {r.credit} · {t(r.license)}
+                    </p>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
           </div>
         )}
 
@@ -280,7 +310,10 @@ export function LessonFlow({ data }: { data: LessonData }) {
                   {t("Next lesson")}: {data.next.title}
                 </Link>
               )}
-              <Link href="/learn" className={buttonClass("secondary", "lg", "w-full")}>
+              <Link href={`/learn/${data.id}`} className={buttonClass("secondary", "lg", "w-full")}>
+                {t("Photos, videos & class examples")}
+              </Link>
+              <Link href={`/learn?track=${data.track}`} className={buttonClass("ghost", "lg", "w-full")}>
                 {t("Back to the path")}
               </Link>
             </div>
@@ -298,7 +331,7 @@ function Bar({ tone, title, body, children }: { tone?: "right" | "wrong"; title?
     <div
       className={cn(
         "fixed inset-x-0 bottom-0 border-t-2 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4",
-        tone === "right" ? "border-transparent bg-[#d7ffe6]" : tone === "wrong" ? "border-transparent bg-[#ffe1e1]" : "border-line bg-surface",
+        tone === "right" ? "border-transparent bg-[var(--color-success-wash)]" : tone === "wrong" ? "border-transparent bg-[var(--color-danger-wash)]" : "border-line bg-surface",
       )}
       aria-live="polite"
     >
