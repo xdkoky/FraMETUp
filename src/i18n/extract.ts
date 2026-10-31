@@ -12,6 +12,9 @@ import { PRACTICE_TIERS, XP_LABEL } from "@/lib/xp/xp";
 import { REFLECTION_PROMPTS } from "@/lib/reflection";
 import { GROWTH_NAV, NAV_ITEMS, SECONDARY_NAV } from "@/components/shell/nav-items";
 import { QUIZ } from "@/lib/quiz/questions";
+import { CREW_ROLES, DEPARTMENT_LABEL, ROLE_SKILLS, reflectionQuestions } from "@/lib/production/roles";
+import { DOCUMENT_KINDS, PRODUCTION_TYPES, SHOT_ANGLES, SHOT_MOVES, SHOT_SIZES, STAGE_LABEL, prepChecklist } from "@/lib/production/lifecycle";
+import { SHOT_STATUS_STYLE } from "@/components/production/badges";
 
 function walk(dir: string, out: string[] = []) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -54,6 +57,24 @@ export function extractKeys(root = path.join(process.cwd(), "src")): Set<string>
     if (q.kind === "order") q.items.forEach((i) => keys.add(i.label));
     if (q.kind === "match") q.pairs.forEach((p) => (keys.add(p.left), keys.add(p.right)));
   }
+  // Production Hub: label maps and lists rendered through t()
+  CREW_ROLES.forEach((r) => keys.add(r.label));
+  [DEPARTMENT_LABEL, STAGE_LABEL].forEach((m) => Object.values(m).forEach((v) => keys.add(v)));
+  Object.values(SHOT_STATUS_STYLE).forEach((v) => keys.add(v.label));
+  [...SHOT_SIZES, ...SHOT_ANGLES, ...SHOT_MOVES, ...PRODUCTION_TYPES, ...DOCUMENT_KINDS].forEach((v) => keys.add(v));
+  prepChecklist({ hasDirector: false, hasDop: false, crewCount: 0, sceneCount: 0, shotCount: 0, shotsWithFocal: 0, briefsFilled: 0, callSheetPublished: false, openTasks: 0, hasShootDate: false }, "").forEach((i) => keys.add(i.label));
+  for (const roles of [["director"], ["dop"], ["sound_mixer"], ["first_ad"], ["grip"]]) reflectionQuestions(roles).forEach((q) => keys.add(q));
+  void ROLE_SKILLS;
+  [
+    "has not tried this role yet", "held this role {n}×", "asked to try it", "new department for them",
+    "Mark ready to shoot", "Start shooting", "Wrap the production", "Move to post-production", "Mark completed",
+    "Start preparation", "Mark ready", "To do", "In progress", "Blocked", "Completed",
+    "Thirds", "Centre", "Safe areas", "Production notes", "Technical problems", "Schedule changes",
+    "Dramatic objective", "What must change in this scene?", "Emotional tone", "e.g. tense, tender, absurd", "Character motivations", "Who wants what from whom?", "Director's notes",
+    "Visual intention", "How should the scene look and feel?", "Framing intention", "e.g. tight, oppressive singles; wide for the reveal", "Camera movement", "e.g. static until the turn, then handheld",
+    "Lighting direction", "e.g. single practical, hard top light", "Sound considerations", "e.g. clean dialogue, room tone, off-screen traffic", "Cinematographer's notes",
+    "You're invited to a production", "Your crew role changed", "Call sheet published", "Call time or location changed", "Shooting date or location changed", "New task assigned to you", "Important announcement", "Production wrapped — write your reflection", "Production update",
+  ].forEach((k) => keys.add(k));
   // Module-level option lists rendered through t()
   [
     "Foundations", "Builds up", "Advanced",
