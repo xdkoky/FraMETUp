@@ -39,7 +39,8 @@ test("a cinematography lesson can be completed from the learning path", async ({
   await page.goto("/learn/camera.shutter");
   await expect(page.getByRole("heading", { name: "See it for real" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Go deeper" })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Shutter Angle in Cinematography Explained/ })).toHaveAttribute("href", "https://www.indepthcine.com/videos/shutter-angle");
+  await expect(page.getByRole("link", { name: /Shutter Angle In Cinematography Explained/ }).first()).toHaveAttribute("href", "https://www.youtube.com/watch?v=ehpdzt0JHUc");
+  await expect(page.locator('img[src*="/learn/refs/camera-shutter-1.jpg"]').first()).toBeVisible();
 
   // Upload a drill result (private by default)
   const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
