@@ -107,7 +107,7 @@ export default async function TimelinePage() {
                 aria-hidden
               />
               <div className="flex flex-wrap items-baseline gap-3">
-                <h2 className="font-display text-3xl">{s.label}</h2>
+                <h2 className="font-display text-[1.75rem]">{s.label}</h2>
                 {s.current && <Badge tone="accent">{t("Now")}</Badge>}
                 <span className="text-xs text-faint">{s.assessedAtEnd}{" "}{t("skills with evidence")}</span>
                 {!s.current && (

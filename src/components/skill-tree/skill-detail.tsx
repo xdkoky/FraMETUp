@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import { AlertTriangle, ArrowRight, ArrowUpRight, Check, ChevronDown, Clock, Crosshair, Info, Timer } from "lucide-react";
+import { AlertTriangle, ArrowRight, ArrowUpRight, BookOpen, Check, ChevronDown, Clock, Crosshair, Info, Timer } from "lucide-react";
 import { CONFIDENCE_LABEL, SOURCE_LABEL } from "@/lib/assessment/engine";
 import { STATE_STYLE } from "@/lib/skill-state";
 import { cn } from "@/lib/utils";
@@ -72,7 +72,7 @@ function LevelBar({ steps, color, confidence }: { steps: number; color: string; 
         <span
           key={n}
           className="h-1.5 flex-1 rounded-full"
-          style={{ background: n <= steps ? color : "#262D3C", opacity: n <= steps ? 0.45 + 0.55 * confidence : 1 }}
+          style={{ background: n <= steps ? color : "var(--color-surface-3)", opacity: n <= steps ? 0.45 + 0.55 * confidence : 1 }}
         />
       ))}
     </div>
@@ -132,7 +132,7 @@ export function SkillDetail({ skill, category, status, prerequisites, enables, r
         </span>
         <span className="text-faint">{category.name}</span>
       </div>
-      <h2 className={cn("mt-1 pr-8 font-display leading-tight", compact ? "text-3xl" : "text-4xl")}>{skill.name}</h2>
+      <h2 className={cn("mt-1 pr-8 font-display leading-tight", compact ? "text-[1.75rem]" : "text-[2.1rem]")}>{skill.name}</h2>
       <p className="mt-1.5 text-muted leading-relaxed">{skill.description}</p>
 
       <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-line-soft bg-ink/40 px-3 py-2.5">
@@ -279,6 +279,27 @@ export function SkillDetail({ skill, category, status, prerequisites, enables, r
               {t("Practice earns XP. Your level only moves with evidence: projects, self-assessment and feedback.")}
             </p>
 
+            {skill.lessons.length > 0 && (
+              <div className="mt-5">
+                <Label>{t("Learn the theory")}</Label>
+                <div className="grid gap-1.5">
+                  {skill.lessons.map((l) => (
+                    <Link
+                      key={l.id}
+                      href={`/lesson/${l.id}`}
+                      className="press flex items-center gap-2.5 rounded-xl border-2 border-line px-3 py-2 text-[13px] font-bold text-text shadow-[0_3px_0_var(--color-line)] hover:bg-surface-2"
+                    >
+                      <span className={cn("grid size-6 shrink-0 place-items-center rounded-full", l.done ? "bg-success-bright text-white" : "bg-accent-soft text-accent")}>
+                        {l.done ? <Check className="size-3.5" strokeWidth={3} aria-hidden /> : <BookOpen className="size-3.5" aria-hidden />}
+                      </span>
+                      <span className="min-w-0 flex-1 truncate">{l.title}</span>
+                      <ArrowRight className="size-3.5 shrink-0 text-faint" aria-hidden />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {(skill.exercises.length > 0 || extras.challenges.length > 0) && (
               <div className="mt-5">
                 <Label>{t("Bigger exercises")}</Label>
@@ -370,7 +391,7 @@ export function SkillDetail({ skill, category, status, prerequisites, enables, r
                 </div>
                 <div>
                   <Label>{t("Evidence confidence")}</Label>
-                  <Meter value={status.confidence * 100} color="#9BA4B5" label={t("Evidence confidence")} />
+                  <Meter value={status.confidence * 100} color="var(--color-faint)" label={t("Evidence confidence")} />
                 </div>
               </div>
             )}

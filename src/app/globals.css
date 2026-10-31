@@ -1,36 +1,42 @@
 @import "tailwindcss";
 
 /* ── FraMETUp design tokens ─────────────────────────────────────────────
-   Dark-first. Muted electric blue for interaction, warm amber for progress
-   and highlights. Category colours are used sparingly as accents. */
+   Bright, playful and chunky: white canvas, bold rounded type, pressable
+   3D buttons and cards. Blue for action, amber for streaks/XP, green for
+   success. Category colours stay as accents. */
 @theme {
-  --color-ink: #0b0d12;
-  --color-surface: #151923;
-  --color-surface-2: #1d2330;
-  --color-surface-3: #262d3c;
-  --color-line: #2a3142;
-  --color-line-soft: #1f2533;
-  --color-text: #f4f5f7;
-  --color-muted: #9ba4b5;
-  --color-faint: #6b7385;
-  --color-accent: #6e9bff;
-  --color-accent-strong: #8fb1ff;
-  --color-accent-soft: rgb(110 155 255 / 0.14);
-  --color-amber: #e8b04b;
-  --color-amber-soft: rgb(232 176 75 / 0.14);
-  --color-danger: #f0706a;
-  --color-success: #7cc79a;
+  --color-ink: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-2: #f4f6f9;
+  --color-surface-3: #e6eaf0;
+  --color-line: #e2e6ec;
+  --color-line-soft: #edf0f4;
+  --color-line-strong: #d3d9e2;
+  --color-text: #2f3542;
+  --color-muted: #616b7c;
+  --color-faint: #8f98a8;
+  --color-accent: #2f7cf6;
+  --color-accent-strong: #1c5fd0;
+  --color-accent-soft: rgb(47 124 246 / 0.1);
+  --color-amber: #e08a00;
+  --color-amber-bright: #ffb020;
+  --color-amber-soft: rgb(255 176 32 / 0.16);
+  --color-danger: #e5484d;
+  --color-danger-strong: #c22f34;
+  --color-success: #26a65b;
+  --color-success-bright: #3ccb73;
+  --color-success-strong: #1f8a4b;
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-display), ui-serif, Georgia, serif;
+  --font-sans: var(--font-nunito), ui-rounded, system-ui, sans-serif;
+  --font-display: var(--font-nunito), ui-rounded, system-ui, sans-serif;
   --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
 
-  --radius-card: 18px;
-  --shadow-glow: 0 0 0 1px rgb(110 155 255 / 0.35), 0 0 24px rgb(110 155 255 / 0.18);
+  --radius-card: 20px;
+  --shadow-glow: 0 0 0 2px var(--color-accent);
 }
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 html,
@@ -41,30 +47,24 @@ body {
 
 body {
   font-family: var(--font-sans);
+  font-weight: 600;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
-/* Subtle film-grain vignette behind everything */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background:
-    radial-gradient(1200px 600px at 15% -10%, rgb(110 155 255 / 0.07), transparent 60%),
-    radial-gradient(900px 500px at 110% 110%, rgb(232 176 75 / 0.05), transparent 60%);
+h1, h2, h3, .font-display {
+  font-weight: 800;
+  letter-spacing: -0.01em;
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 3px solid rgb(47 124 246 / 0.45);
   outline-offset: 2px;
-  border-radius: 6px;
+  border-radius: 10px;
 }
 
 ::selection {
-  background: rgb(110 155 255 / 0.35);
+  background: rgb(47 124 246 / 0.2);
 }
 
 /* Scrollbars */
@@ -75,9 +75,10 @@ body::before {
 
 .slate-label {
   overflow-wrap: anywhere;
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.14em;
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-faint);
 }
@@ -85,16 +86,44 @@ body::before {
 .card {
   /* Grid/flex children must be allowed to shrink, or long text widens the page on phones. */
   min-width: 0;
-  background: linear-gradient(180deg, rgb(255 255 255 / 0.028), transparent 45%), var(--color-surface);
-  border: 1px solid var(--color-line-soft);
+  background: var(--color-surface);
+  border: 2px solid var(--color-line);
   border-radius: var(--radius-card);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04), 0 12px 32px -18px rgb(0 0 0 / 0.6);
-  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 3px 0 var(--color-line);
+  transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
 }
 a.card:hover {
-  border-color: var(--color-line);
+  border-color: var(--color-line-strong);
   transform: translateY(-2px);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.05), 0 18px 40px -20px rgb(0 0 0 / 0.75);
+  box-shadow: 0 5px 0 var(--color-line-strong);
+}
+a.card:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--color-line-strong);
+}
+
+/* Pressable 3D surface used by buttons, path nodes and answer tiles. */
+.press {
+  transition: transform 0.08s, box-shadow 0.08s, filter 0.15s;
+}
+.press:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow: none !important;
+}
+
+@keyframes pop {
+  0% { transform: scale(0.6); opacity: 0; }
+  60% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); }
+}
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+@keyframes bounce-soft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
 }
 
 @keyframes pagein {
@@ -111,6 +140,7 @@ a.card:hover {
 }
 .react-flow__controls-button {
   background: var(--color-surface) !important;
+  border-width: 0 0 2px !important;
   border-color: var(--color-line) !important;
   color: var(--color-muted) !important;
   fill: var(--color-muted) !important;

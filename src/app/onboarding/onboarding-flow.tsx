@@ -55,7 +55,7 @@ export function OnboardingFlow({ defaultName, categories, skills, currentYear }:
 
         <section className="animate-[fadein_.25s_ease-out]" hidden={step !== 0} aria-labelledby="s0">
           <div className="slate-label mb-2">{t("Step 1 of 4")}</div>
-          <h1 id="s0" className="font-display text-4xl">{t("Welcome to your director's map.")}</h1>
+          <h1 id="s0" className="font-display text-[2.1rem]">{t("Welcome to your director's map.")}</h1>
           <p className="mt-2 text-muted">{t("A few quick questions. You can change all of this later.")}</p>
           <div className="mt-8 grid gap-5 sm:grid-cols-2">
             <div className="sm:col-span-2">
@@ -89,7 +89,7 @@ export function OnboardingFlow({ defaultName, categories, skills, currentYear }:
 
         <section className="animate-[fadein_.25s_ease-out]" hidden={step !== 1} aria-labelledby="s1">
           <div className="slate-label mb-2">{t("Step 2 of 4")}</div>
-          <h2 id="s1" className="font-display text-4xl">{t("What pulls you in?")}</h2>
+          <h2 id="s1" className="font-display text-[2.1rem]">{t("What pulls you in?")}</h2>
           <p className="mt-2 text-muted">{t("Pick the areas you're most curious about. This shapes recommendations, never your assessment.")}</p>
           <div className="mt-6 grid gap-2 sm:grid-cols-2">
             {categories.map((c) => {
@@ -123,7 +123,7 @@ export function OnboardingFlow({ defaultName, categories, skills, currentYear }:
 
         <section className="animate-[fadein_.25s_ease-out]" hidden={step !== 2} aria-labelledby="s2">
           <div className="slate-label mb-2">{t("Step 3 of 4")}</div>
-          <h2 id="s2" className="font-display text-4xl">{t("Set a first learning goal")}</h2>
+          <h2 id="s2" className="font-display text-[2.1rem]">{t("Set a first learning goal")}</h2>
           <p className="mt-2 text-muted">{t("Optional, but goals help FraMETUp suggest useful next challenges.")}</p>
           <div className="mt-6">
             <Label htmlFor="goalTitle">{t("Your goal, in your own words")}</Label>
@@ -157,7 +157,7 @@ export function OnboardingFlow({ defaultName, categories, skills, currentYear }:
 
         <section className="animate-[fadein_.25s_ease-out]" hidden={step !== 3} aria-labelledby="s3">
           <div className="slate-label mb-2">{t("Step 4 of 4")}</div>
-          <h2 id="s3" className="font-display text-4xl">{t("How FraMETUp thinks")}</h2>
+          <h2 id="s3" className="font-display text-[2.1rem]">{t("How FraMETUp thinks")}</h2>
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             {[
               { icon: GitBranch, title: t("Skills connect"), body: t("105 directing skills in 8 categories form a map. Links show which skills support others — guidance, never locks.") },

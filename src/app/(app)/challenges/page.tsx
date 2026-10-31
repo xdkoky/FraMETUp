@@ -100,7 +100,7 @@ export default async function ChallengesPage({ searchParams }: { searchParams: P
                         </Badge>
                       )}
                     </div>
-                    <h2 className="mt-2 font-display text-3xl leading-tight">{c.title}</h2>
+                    <h2 className="mt-2 font-display text-[1.75rem] leading-tight">{c.title}</h2>
                   </div>
                   <Target className="size-5 text-amber shrink-0" aria-hidden />
                 </div>

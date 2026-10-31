@@ -13,7 +13,8 @@ export type XpKind =
   | "REVIEW_GIVEN"
   | "CHALLENGE_COMPLETED"
   | "PROJECT_REVISITED"
-  | "DRILL_PRACTISED";
+  | "DRILL_PRACTISED"
+  | "LESSON_COMPLETED";
 
 export const XP_BASE: Record<XpKind, number> = {
   PROJECT_CREATED: 10,
@@ -26,6 +27,7 @@ export const XP_BASE: Record<XpKind, number> = {
   CHALLENGE_COMPLETED: 60,
   PROJECT_REVISITED: 20,
   DRILL_PRACTISED: 15,
+  LESSON_COMPLETED: 30,
 };
 
 export const XP_LABEL: Record<XpKind, string> = {
@@ -39,7 +41,11 @@ export const XP_LABEL: Record<XpKind, string> = {
   CHALLENGE_COMPLETED: "Completed a challenge",
   PROJECT_REVISITED: "Revisited an earlier project",
   DRILL_PRACTISED: "Practised a drill",
+  LESSON_COMPLETED: "Completed a lesson",
 };
+
+/** Kinds that can only happen once per item (each lesson is finished once), so repetition can't be farmed. */
+const NO_DIMINISHING: ReadonlySet<XpKind> = new Set(["LESSON_COMPLETED"]);
 
 export const DAILY_CAP = 250;
 const WINDOW_DAYS = 7;
@@ -64,7 +70,7 @@ export function calculateXp(kind: XpKind, prior: PriorEvent[], now: Date, qualit
   const base = XP_BASE[kind];
   const windowStart = now.getTime() - WINDOW_DAYS * 86400000;
   const sameKindRecent = prior.filter((e) => e.kind === kind && e.createdAt.getTime() >= windowStart).length;
-  const diminishing = 1 / (1 + 0.5 * sameKindRecent);
+  const diminishing = NO_DIMINISHING.has(kind) ? 1 : 1 / (1 + 0.5 * sameKindRecent);
   const q = Math.min(1, Math.max(0, quality));
 
   const dayStart = new Date(now);
@@ -78,7 +84,7 @@ export function calculateXp(kind: XpKind, prior: PriorEvent[], now: Date, qualit
   const awarded = Math.min(raw, remaining);
 
   const parts = [XP_LABEL[kind]];
-  if (sameKindRecent > 0) parts.push(`diminishing returns (${sameKindRecent} similar this week)`);
+  if (sameKindRecent > 0 && !NO_DIMINISHING.has(kind)) parts.push(`diminishing returns (${sameKindRecent} similar this week)`);
   if (q < 1) parts.push(`depth factor ${Math.round(q * 100)}%`);
   if (awarded < raw) parts.push("daily cap reached");
   return { baseXp: base, awardedXp: awarded, reason: parts.join(" · ") };

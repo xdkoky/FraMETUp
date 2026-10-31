@@ -20,7 +20,7 @@ test("the app is usable on a phone", async ({ page }) => {
   // No horizontal overflow on content pages, in either language
   for (const lang of ["en", "hu"]) {
     await page.context().addCookies([{ name: "lang", value: lang, url: "http://localhost:3000" }]);
-    for (const path of ["/dashboard", "/projects", "/feedback", "/dna", "/challenges", "/timeline", "/profile", "/settings", "/assess"]) {
+    for (const path of ["/dashboard", "/learn", "/lesson/lenses.focal", "/projects", "/feedback", "/dna", "/challenges", "/timeline", "/profile", "/settings", "/assess"]) {
       await page.goto(path);
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       expect(overflow, `${lang} ${path}`).toBeLessThanOrEqual(1);

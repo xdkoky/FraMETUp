@@ -119,7 +119,7 @@ export default async function FeedbackPage({ searchParams }: { searchParams: Pro
 
       <section className="mt-10">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-display text-3xl">{t("Feedback you received")}</h2>
+          <h2 className="font-display text-[1.75rem]">{t("Feedback you received")}</h2>
           <span className="flex items-center gap-1.5 text-xs text-faint">
             <ShieldCheck className="size-3.5" aria-hidden />{" "}{t("Only you and each reviewer can see these")}
           </span>

@@ -16,7 +16,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const { next } = await searchParams;
   return (
     <>
-      <h1 className="font-display text-4xl">{t("Welcome back")}</h1>
+      <h1 className="font-display text-[2.1rem]">{t("Welcome back")}</h1>
       <p className="mt-2 text-sm text-muted">{t("Sign in to continue mapping your work.")}</p>
       <LoginForm next={next} />
       <p className="mt-6 text-sm text-muted">

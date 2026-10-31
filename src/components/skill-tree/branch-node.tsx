@@ -34,7 +34,7 @@ export const BranchNode = memo(function BranchNode({ data }: NodeProps<Node<Bran
     <div
       className={cn(
         "w-[232px] rounded-2xl border bg-surface px-3.5 py-3 transition-all duration-200",
-        data.highlight === "selected" && "border-accent shadow-[0_0_0_1px_var(--color-accent),0_12px_32px_-12px_rgba(110,155,255,0.55)]",
+        data.highlight === "selected" && "border-accent shadow-[0_0_0_1px_var(--color-accent),0_12px_32px_-12px_rgba(47,124,246,0.35)]",
         data.highlight === "upstream" && "border-accent/60",
         data.highlight === "downstream" && "border-amber/60",
         !data.highlight && (assessed ? "border-line" : "border-dashed border-line"),
@@ -61,11 +61,11 @@ export const BranchNode = memo(function BranchNode({ data }: NodeProps<Node<Bran
             <span
               key={n}
               className="h-1.5 flex-1 rounded-full"
-              style={{ background: n <= steps ? st.color : "#262D3C", opacity: n <= steps ? 0.45 + 0.55 * data.confidence : 1 }}
+              style={{ background: n <= steps ? st.color : "var(--color-surface-3)", opacity: n <= steps ? 0.45 + 0.55 * data.confidence : 1 }}
             />
           ))}
         </div>
-        <span className="text-[10.5px] whitespace-nowrap" style={{ color: assessed ? st.color : "#6B7385" }}>
+        <span className="text-[10.5px] whitespace-nowrap" style={{ color: assessed ? st.color : "var(--color-faint)" }}>
           {t(st.short)}
         </span>
       </div>

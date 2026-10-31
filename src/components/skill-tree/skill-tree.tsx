@@ -169,7 +169,7 @@ function TreeInner({ data }: { data: TreeData }) {
           type: "default",
           animated: Boolean(onPath || onDown),
           style: {
-            stroke: onPath ? "#6E9BFF" : onDown ? "#E8B04B" : "#343C4F",
+            stroke: onPath ? "var(--color-accent)" : onDown ? "var(--color-amber-bright)" : "var(--color-line-strong)",
             strokeWidth: onPath || onDown ? 2 : 1.5,
             opacity: quiet ? 0.15 : 1,
           },
@@ -322,7 +322,7 @@ function TreeInner({ data }: { data: TreeData }) {
                   <div key={c.id} className="card group flex flex-col p-5 hover:border-line">
                     <button onClick={() => openArea(c.id)} className="flex items-start gap-3 text-left" aria-label={`${c.name} — ${t("Open area")}`}>
                       <svg viewBox="0 0 44 44" className="size-11 shrink-0 -rotate-90" aria-hidden>
-                        <circle cx="22" cy="22" r="18" fill="none" stroke="#262D3C" strokeWidth="4" />
+                        <circle cx="22" cy="22" r="18" fill="none" stroke="var(--color-surface-3)" strokeWidth="4" />
                         <circle cx="22" cy="22" r="18" fill="none" stroke={c.color} strokeWidth="4" strokeLinecap="round" strokeDasharray={`${113 * pct} 113`} />
                       </svg>
                       <div className="min-w-0 flex-1">
@@ -379,7 +379,7 @@ function TreeInner({ data }: { data: TreeData }) {
             className="!bg-transparent"
             aria-label={t("Director skill tree")}
           >
-            <Background variant={BackgroundVariant.Dots} gap={28} size={1} color="#1C2230" />
+            <Background variant={BackgroundVariant.Dots} gap={28} size={1} color="#D9DEE6" />
             <Controls showInteractive={false} position="bottom-left" />
           </ReactFlow>
         ) : (
@@ -409,7 +409,7 @@ function TreeInner({ data }: { data: TreeData }) {
                               <span className="min-w-0 flex-1 text-sm">{sk.name}</span>
                               <span className="flex w-20 gap-0.5" aria-hidden>
                                 {[1, 2, 3, 4, 5].map((n) => (
-                                  <span key={n} className="h-1.5 flex-1 rounded-full" style={{ background: n <= steps ? STATE_STYLE[st.state].color : "#262D3C" }} />
+                                  <span key={n} className="h-1.5 flex-1 rounded-full" style={{ background: n <= steps ? STATE_STYLE[st.state].color : "var(--color-surface-3)" }} />
                                 ))}
                               </span>
                               <ChevronRight className="size-4 text-faint" aria-hidden />

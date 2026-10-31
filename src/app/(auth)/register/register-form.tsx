@@ -29,7 +29,7 @@ export function RegisterForm() {
         <FieldError errors={state?.fieldErrors?.password} />
       </div>
       <label className="flex items-start gap-2.5 text-sm text-muted">
-        <input type="checkbox" name="privacy" className="mt-1 accent-[#6E9BFF]" />
+        <input type="checkbox" name="privacy" className="mt-1 accent-[var(--color-accent)]" />
         <span>
           {t("I have read the")}{" "}
           <Link href="/privacy" className="text-accent hover:underline" target="_blank">

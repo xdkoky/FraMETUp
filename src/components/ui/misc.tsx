@@ -48,7 +48,7 @@ export function Badge({
   return (
     <span
       style={style}
-      className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium leading-4", tones[tone], className)}
+      className={cn("inline-flex items-center gap-1 rounded-full border-2 px-2 py-0.5 text-[11px] font-extrabold leading-4", tones[tone], className)}
     >
       {children}
     </span>
@@ -71,11 +71,11 @@ export function PageHeader({
       <div className="max-w-2xl">
         {eyebrow && (
           <div className="slate-label mb-3 flex items-center gap-2">
-            <span className="size-1.5 rounded-full bg-accent" aria-hidden />
+            <span className="size-2 rounded-full bg-accent" aria-hidden />
             {eyebrow}
           </div>
         )}
-        <h1 className="font-display text-[2.6rem] md:text-[3.4rem] leading-[1.02] tracking-tight text-text">{title}</h1>
+        <h1 className="font-display text-[2.1rem] md:text-[2.7rem] font-black leading-[1.08] tracking-tight text-text">{title}</h1>
         {description && <p className="mt-3 text-muted leading-relaxed">{description}</p>}
       </div>
       {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
@@ -97,7 +97,7 @@ export function EmptyState({
   className?: string;
 }) {
   return (
-    <div className={cn("flex flex-col items-center text-center px-6 py-10 rounded-xl border border-dashed border-line", className)}>
+    <div className={cn("flex flex-col items-center text-center px-6 py-10 rounded-2xl border-2 border-dashed border-line", className)}>
       {icon && <div className="mb-3 text-faint">{icon}</div>}
       <h3 className="text-sm font-semibold text-text">{title}</h3>
       {children && <p className="mt-1.5 text-sm text-muted max-w-sm leading-relaxed">{children}</p>}
@@ -127,13 +127,15 @@ export function Meter({
       aria-valuenow={Math.round(value)}
       aria-valuemin={0}
       aria-valuemax={max}
-      className={cn("h-1.5 w-full rounded-full bg-surface-3 overflow-hidden", className)}
+      className={cn("h-2.5 w-full rounded-full bg-surface-3 overflow-hidden", className)}
     >
-      <div className="h-full rounded-full transition-[width] duration-700 ease-out" style={{ width: `${pct}%`, background: color }} />
+      <div className="relative h-full rounded-full transition-[width] duration-700 ease-out" style={{ width: `${pct}%`, background: color }}>
+        <span className="absolute inset-x-1.5 top-[3px] h-[3px] rounded-full bg-white/35" aria-hidden />
+      </div>
     </div>
   );
 }
 
 export function DemoBanner({ children }: { children: React.ReactNode }) {
-  return <div className="border-b border-amber/20 bg-amber-soft text-amber text-xs px-4 py-1.5 text-center">{children}</div>;
+  return <div className="border-b-2 border-amber/20 bg-amber-soft text-amber text-xs font-bold px-4 py-1.5 text-center">{children}</div>;
 }

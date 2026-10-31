@@ -22,6 +22,8 @@ export interface TreeSkill {
   evidenceTypes: string[];
   exercises: string[];
   subskills: LocalizedSubSkill[];
+  /** Cinematography-track lessons that teach this skill. */
+  lessons: { id: string; title: string; done: boolean }[];
 }
 
 export interface TreeEdge {

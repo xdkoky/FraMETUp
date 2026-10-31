@@ -141,7 +141,7 @@ export default async function ProjectPage({
         </div>
         <div className="mt-2 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="max-w-3xl">
-            <h1 className="font-display text-4xl md:text-5xl leading-tight">{project.title}</h1>
+            <h1 className="font-display text-[2.1rem] md:text-[2.6rem] leading-tight">{project.title}</h1>
             {project.logline && <p className="mt-2 text-lg text-muted italic">{project.logline}</p>}
             <div className="mt-3 flex flex-wrap items-center gap-2">
               {!isOwner && <Badge tone="outline">{t("Owned by")}{" "}{project.owner.profile?.displayName}</Badge>}

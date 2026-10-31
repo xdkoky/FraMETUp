@@ -137,7 +137,7 @@ export function QuizFlow({
 
           {q && (
             <>
-              <h1 className="font-display text-3xl leading-tight sm:text-4xl">{t(q.prompt)}</h1>
+              <h1 className="font-display text-[1.75rem] leading-tight sm:text-[2.1rem]">{t(q.prompt)}</h1>
               {q.hint && <p className="mt-2 text-sm text-muted">{t(q.hint)}</p>}
               <div className="mt-6">
                 <QuestionBody q={q} answer={answers[q.id]} onAnswer={(a) => set(q.id, a)} />
@@ -181,7 +181,7 @@ function Intro({ firstName, retake, onStart }: { firstName: string; retake: bool
       <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-accent-soft text-accent">
         <Sparkles className="size-6" aria-hidden />
       </div>
-      <h1 className="mt-5 font-display text-4xl sm:text-5xl">{retake ? t("Take the quiz again") : t("Let's find your starting point, {name}.", { name: firstName })}</h1>
+      <h1 className="mt-5 font-display text-[2.1rem] sm:text-[2.6rem]">{retake ? t("Take the quiz again") : t("Let's find your starting point, {name}.", { name: firstName })}</h1>
       <p className="mx-auto mt-3 max-w-lg text-muted leading-relaxed">
         {t("Eleven quick, hands-on questions — tap, choose and arrange. Your answers give your skill tree a first, provisional shape.")}
       </p>
@@ -483,7 +483,7 @@ function Results({ result, skills, onRetry }: { result: QuizOutcome; skills: Rec
         <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-amber-soft text-amber">
           <Sparkles className="size-6" aria-hidden />
         </div>
-        <h1 className="mt-4 font-display text-4xl">{t("Your starting map is ready")}</h1>
+        <h1 className="mt-4 font-display text-[2.1rem]">{t("Your starting map is ready")}</h1>
         <p className="mx-auto mt-2 max-w-lg text-muted">
           {entries.length
             ? t("{n} skills now have a provisional starting level. They're marked as self-reported until projects and feedback back them up.", { n: entries.length })
