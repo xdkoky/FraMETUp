@@ -45,10 +45,11 @@ test("a cinematography lesson can be completed from the learning path", async ({
   const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
   const drill = page.locator("form").filter({ hasText: "Add your drill result" });
   await drill.locator('input[name="file"]').setInputFiles({ name: "drill.png", mimeType: "image/png", buffer: png });
-  await drill.getByLabel(/Caption/).fill("Same action at 180° and 45° shutter");
+  const caption = `Same action at 180° and 45° shutter ${Date.now()}`;
+  await drill.getByLabel(/Caption/).fill(caption);
   await drill.getByLabel(/I took this picture/).check();
   await drill.getByRole("button", { name: "Upload" }).click();
   await expect(page.getByText("Photo added.")).toBeVisible();
-  await expect(page.getByRole("img", { name: "Same action at 180° and 45° shutter" })).toBeVisible();
-  await expect(page.getByText("Only you can see this")).toBeVisible();
+  await expect(page.getByRole("img", { name: caption })).toBeVisible();
+  await expect(page.getByText("Only you can see this").first()).toBeVisible();
 });

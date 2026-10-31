@@ -40,6 +40,15 @@ export default async function ProfilePage() {
     REVIEW_REQUESTED: "New feedback request",
     REVIEW_RECEIVED: "You received new feedback",
     REVIEW_DECLINED: "A feedback request was declined",
+    PRODUCTION_INVITE: "You're invited to a production",
+    CREW_ROLE_ASSIGNED: "Your crew role changed",
+    CALL_SHEET_PUBLISHED: "Call sheet published",
+    CALL_TIME_CHANGED: "Call time or location changed",
+    SCHEDULE_CHANGED: "Shooting date or location changed",
+    TASK_ASSIGNED: "New task assigned to you",
+    PRODUCTION_ANNOUNCEMENT: "Important announcement",
+    PRODUCTION_WRAPPED: "Production wrapped — write your reflection",
+    PRODUCTION_UPDATE: "Production update",
   };
   // Stored titles are English; known kinds get a translated title.
   const notificationTitle = (kind: string, stored: string) => (locale === "en" || !KIND_TITLE[kind] ? stored : t(KIND_TITLE[kind]));

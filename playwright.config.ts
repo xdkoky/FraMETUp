@@ -12,7 +12,8 @@ export default defineConfig({
   use: {
     baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000",
     trace: "retain-on-failure",
-    launchOptions: executablePath ? { executablePath } : undefined,
+    // A fake camera lets the Virtual Viewfinder be tested headlessly.
+    launchOptions: { ...(executablePath ? { executablePath } : {}), args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"] },
   },
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } }, testIgnore: /mobile\.spec\.ts/ },

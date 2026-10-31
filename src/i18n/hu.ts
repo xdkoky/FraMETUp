@@ -4,6 +4,7 @@ import { HU3 } from "./hu-3";
 import { HU4 } from "./hu-4";
 import { HU5 } from "./hu-5";
 import { HU6 } from "./hu-6";
+import { HU7 } from "./hu-7";
 
 /** Hungarian UI dictionary, keyed by the English source text. */
-export const HU: Record<string, string> = { ...HU1, ...HU2, ...HU3, ...HU4, ...HU5, ...HU6 };
+export const HU: Record<string, string> = { ...HU1, ...HU2, ...HU3, ...HU4, ...HU5, ...HU6, ...HU7 };

@@ -14,7 +14,8 @@ export type XpKind =
   | "CHALLENGE_COMPLETED"
   | "PROJECT_REVISITED"
   | "DRILL_PRACTISED"
-  | "LESSON_COMPLETED";
+  | "LESSON_COMPLETED"
+  | "PRODUCTION_WRAPPED";
 
 export const XP_BASE: Record<XpKind, number> = {
   PROJECT_CREATED: 10,
@@ -28,6 +29,7 @@ export const XP_BASE: Record<XpKind, number> = {
   PROJECT_REVISITED: 20,
   DRILL_PRACTISED: 15,
   LESSON_COMPLETED: 30,
+  PRODUCTION_WRAPPED: 60,
 };
 
 export const XP_LABEL: Record<XpKind, string> = {
@@ -42,10 +44,11 @@ export const XP_LABEL: Record<XpKind, string> = {
   PROJECT_REVISITED: "Revisited an earlier project",
   DRILL_PRACTISED: "Practised a drill",
   LESSON_COMPLETED: "Completed a lesson",
+  PRODUCTION_WRAPPED: "Worked on a production",
 };
 
 /** Kinds that can only happen once per item (each lesson is finished once), so repetition can't be farmed. */
-const NO_DIMINISHING: ReadonlySet<XpKind> = new Set(["LESSON_COMPLETED"]);
+const NO_DIMINISHING: ReadonlySet<XpKind> = new Set(["LESSON_COMPLETED", "PRODUCTION_WRAPPED"]);
 
 export const DAILY_CAP = 250;
 const WINDOW_DAYS = 7;

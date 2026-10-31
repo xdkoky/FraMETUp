@@ -49,6 +49,10 @@ model User {
   masterySnapshots MasterySnapshot[]
   experienceEvents ExperienceEvent[]
   lessonMedia     LessonMedia[]
+  productionsCreated Production[] @relation("ProductionCreator")
+  productionMembers  ProductionMember[]
+  cameraProfiles     CameraProfile[]
+  phoneCalibrations  PhoneCalibration[]
   reflections     Reflection[]
   challengeCompletions ChallengeCompletion[]
   challengesCreated Challenge[]
@@ -755,4 +759,402 @@ model LessonMedia {
 
   @@index([lessonId, kind])
   @@index([uploaderId])
+}
+
+// ── Production Hub ──────────────────────────────────────────────────────────
+
+enum ProductionStatus {
+  PRE_PRODUCTION
+  READY
+  PRODUCTION
+  WRAPPED
+  POST_PRODUCTION
+  COMPLETED
+}
+
+enum MemberStatus {
+  INVITED
+  ACCEPTED
+  DECLINED
+}
+
+model Production {
+  id          String           @id @default(cuid())
+  title       String
+  description String           @default("")
+  type        String           @default("Studio exercise")
+  location    String           @default("Lloyd Studio")
+  shootDate   DateTime?
+  status      ProductionStatus @default(PRE_PRODUCTION)
+  createdById String
+  createdBy   User             @relation("ProductionCreator", fields: [createdById], references: [id])
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  deletedAt   DateTime?
+
+  members       ProductionMember[]
+  scenes        Scene[]
+  shots         Shot[]
+  references    ShotReference[]
+  callSheets    CallSheetVersion[]
+  tasks         ProductionTask[]
+  readiness     DepartmentReadiness[]
+  takes         TakeLog[]
+  documents     ProductionDocument[]
+  announcements ProductionAnnouncement[]
+  changes       ProductionChange[]
+  comments      ProductionComment[]
+  wrap          WrapReport?
+  reflections   ProductionReflection[]
+}
+
+/// A person on a production. Actors and guests may have no account (userId null).
+/// Crew roles are keys from the crew-role catalogue or free text; permissions derive from them.
+model ProductionMember {
+  id           String       @id @default(cuid())
+  productionId String
+  production   Production   @relation(fields: [productionId], references: [id], onDelete: Cascade)
+  userId       String?
+  user         User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  phone        String?
+  email        String?
+  roles        String[]
+  isManager    Boolean      @default(false)
+  isActor      Boolean      @default(false)
+  status       MemberStatus @default(INVITED)
+  invitedAt    DateTime     @default(now())
+  respondedAt  DateTime?
+
+  tasks           ProductionTask[]
+  acknowledgements CallSheetAcknowledgement[]
+
+  @@unique([productionId, userId])
+  @@index([userId])
+}
+
+model Scene {
+  id                String     @id @default(cuid())
+  productionId      String
+  production        Production @relation(fields: [productionId], references: [id], onDelete: Cascade)
+  number            String
+  title             String     @default("")
+  description       String     @default("")
+  order             Int        @default(0)
+  dramaticObjective String     @default("")
+  tone              String     @default("")
+  motivations       String     @default("")
+  visualIntention   String     @default("")
+  cameraMovement    String     @default("")
+  framing           String     @default("")
+  lighting          String     @default("")
+  sound             String     @default("")
+  directorNotes     String     @default("")
+  dopNotes          String     @default("")
+  updatedAt         DateTime   @updatedAt
+  updatedById       String?
+
+  shots Shot[]
+  tasks ProductionTask[]
+  takes TakeLog[]
+  documents ProductionDocument[]
+
+  @@index([productionId])
+}
+
+enum ShotStatus {
+  PLANNED
+  PREPARING
+  READY
+  SHOOTING
+  COMPLETED
+  SKIPPED
+  PICKUP
+}
+
+model Shot {
+  id                 String     @id @default(cuid())
+  productionId       String
+  production         Production @relation(fields: [productionId], references: [id], onDelete: Cascade)
+  sceneId            String
+  scene              Scene      @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  code               String
+  order              Int        @default(0)
+  description        String     @default("")
+  size               String     @default("")
+  angle              String     @default("")
+  movement           String     @default("")
+  focalLength        Float?
+  cameraLabel        String?
+  sensorLabel        String?
+  aspect             String?
+  lens               String?
+  setupMinutes       Int?
+  equipment          String     @default("")
+  intention          String     @default("")
+  dopNotes           String     @default("")
+  status             ShotStatus @default(PLANNED)
+  prepStartedAt      DateTime?
+  shootStartedAt     DateTime?
+  completedAt        DateTime?
+  preferredReferenceId String?
+  updatedAt          DateTime   @updatedAt
+
+  references ShotReference[]
+  takes      TakeLog[]
+  tasks      ProductionTask[]
+
+  @@index([productionId])
+  @@index([sceneId])
+}
+
+/// A frame captured in the Virtual Viewfinder (or uploaded) with the camera/lens it simulates.
+model ShotReference {
+  id           String     @id @default(cuid())
+  productionId String
+  production   Production @relation(fields: [productionId], references: [id], onDelete: Cascade)
+  shotId       String
+  shot         Shot       @relation(fields: [shotId], references: [id], onDelete: Cascade)
+  storageKey   String
+  mimeType     String
+  focalLength  Float?
+  cameraLabel  String?
+  sensorLabel  String?
+  sensorWidthMm  Float?
+  sensorHeightMm Float?
+  aspect       String?
+  calibrated   Boolean    @default(false)
+  phoneFovDeg  Float?
+  note         String     @default("")
+  createdById  String
+  createdAt    DateTime   @default(now())
+}
+
+/// A user-defined camera profile. Bundled ARRI/RED profiles live in code with sources.
+model CameraProfile {
+  id           String   @id @default(cuid())
+  createdById  String
+  createdBy    User     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  manufacturer String
+  model        String
+  /// [{ "name": "Open Gate", "widthMm": 28.25, "heightMm": 18.17 }]
+  modes        Json
+  shared       Boolean  @default(false)
+  createdAt    DateTime @default(now())
+}
+
+/// How wide one of the user's phone cameras sees, measured by the user.
+model PhoneCalibration {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label         String
+  longSideFovDeg Float
+  method        String
+  createdAt     DateTime @default(now())
+
+  @@unique([userId, label])
+}
+
+enum CallSheetState {
+  DRAFT
+  PUBLISHED
+}
+
+/// One draft per production plus an immutable row per published version.
+model CallSheetVersion {
+  id            String         @id @default(cuid())
+  productionId  String
+  production    Production     @relation(fields: [productionId], references: [id], onDelete: Cascade)
+  state         CallSheetState
+  version       Int            @default(0)
+  data          Json
+  changeSummary String         @default("")
+  important     Boolean        @default(false)
+  publishedAt   DateTime?
+  publishedById String?
+  updatedAt     DateTime       @updatedAt
+
+  acknowledgements CallSheetAcknowledgement[]
+
+  @@index([productionId, state])
+}
+
+model CallSheetAcknowledgement {
+  id        String           @id @default(cuid())
+  versionId String
+  version   CallSheetVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  memberId  String
+  member    ProductionMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  at        DateTime         @default(now())
+
+  @@unique([versionId, memberId])
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  BLOCKED
+  DONE
+}
+
+enum TaskPriority {
+  LOW
+  NORMAL
+  HIGH
+}
+
+model ProductionTask {
+  id           String            @id @default(cuid())
+  productionId String
+  production   Production        @relation(fields: [productionId], references: [id], onDelete: Cascade)
+  title        String
+  description  String            @default("")
+  assigneeId   String?
+  assignee     ProductionMember? @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
+  department   String            @default("")
+  sceneId      String?
+  scene        Scene?            @relation(fields: [sceneId], references: [id], onDelete: SetNull)
+  shotId       String?
+  shot         Shot?             @relation(fields: [shotId], references: [id], onDelete: SetNull)
+  due          DateTime?
+  priority     TaskPriority      @default(NORMAL)
+  status       TaskStatus        @default(TODO)
+  createdById  String
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  documents ProductionDocument[]
+
+  @@index([productionId])
+}
+
+model DepartmentReadiness {
+  id           String     @id @default(cuid())
+  productionId String
+  production   Production @relation(fields: [productionId], references: [id], onDelete: Cascade)
+  department   String
+  ready        Boolean    @default(false)
+  note         String     @default("")
+  updatedById  String?
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([productionId, department])
+}
+
+model TakeLog {
+  id           String     @id @default(cuid())
+  productionId String
+  production   Production @relation(fields: [productionId], references: [id], onDelete: Cascade)
+  sceneId      String
+  scene        Scene      @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  shotId       String
+  shot         Shot       @relation(fields: [shotId], references: [id], onDelete: Cascade)
+  take         Int
+  notes        String     @default("")
+  continuity   String     @default("")
+  soundIssue   String     @default("")
+  cameraIssue  String     @default("")
+  preferred    Boolean    @default(false)
+  photoKey     String?
+  photoMime    String?
+  createdById  String
+  createdAt    DateTime   @default(now())
+
+  @@unique([shotId, take])
+}
+
+model ProductionDocument {
+  id           String     @id @default(cuid())
+  productionId String
+  production   Production @relation(fields: [productionId], references: [id], onDelete: Cascade)
+  kind         String
+  title        String
+  sceneId      String?
+  scene        Scene?     @relation(fields: [sceneId], references: [id], onDelete: SetNull)
+  taskId       String?
+  task         ProductionTask? @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  createdById  String
+  createdAt    DateTime   @default(now())
+  deletedAt    DateTime?
+
+  versions ProductionDocumentVersion[]
+}
+
+/// New uploads add a version; nothing is ever overwritten.
+model ProductionDocumentVersion {
+  id           String             @id @default(cuid())
+  documentId   String
+  document     ProductionDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  version      Int
+  storageKey   String
+  mimeType     String
+  sizeBytes    Int
+  fileName     String
+  note         String             @default("")
+  uploadedById String
+  createdAt    DateTime           @default(now())
+
+  @@unique([documentId, version])
+}
+
+model ProductionAnnouncement {
+  id           String     @id @default(cuid())
+  productionId String
+  production   Production @relation(fields: [productionId], references: [id], onDelete: Cascade)
+  body         String
+  important    Boolean    @default(false)
+  authorId     String
+  createdAt    DateTime   @default(now())
+}
+
+/// Change log for everything on a production; also drives the live "something changed" check.
+model ProductionChange {
+  id           String     @id @default(cuid())
+  productionId String
+  production   Production @relation(fields: [productionId], references: [id], onDelete: Cascade)
+  kind         String
+  summary      String
+  important    Boolean    @default(false)
+  actorId      String?
+  createdAt    DateTime   @default(now())
+
+  @@index([productionId, createdAt])
+}
+
+model ProductionComment {
+  id           String     @id @default(cuid())
+  productionId String
+  production   Production @relation(fields: [productionId], references: [id], onDelete: Cascade)
+  targetType   String
+  targetId     String
+  authorId     String
+  body         String
+  createdAt    DateTime   @default(now())
+
+  @@index([targetType, targetId])
+}
+
+model WrapReport {
+  id               String     @id @default(cuid())
+  productionId     String     @unique
+  production       Production @relation(fields: [productionId], references: [id], onDelete: Cascade)
+  notes            String     @default("")
+  technicalProblems String    @default("")
+  scheduleChanges  String     @default("")
+  wrappedAt        DateTime   @default(now())
+  wrappedById      String
+}
+
+model ProductionReflection {
+  id           String     @id @default(cuid())
+  productionId String
+  production   Production @relation(fields: [productionId], references: [id], onDelete: Cascade)
+  userId       String
+  role         String
+  answers      Json
+  projectId    String?
+  createdAt    DateTime   @default(now())
+
+  @@unique([productionId, userId])
 }
