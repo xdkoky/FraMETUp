@@ -95,12 +95,13 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
                         <Link
                           href={`/lesson/${l.id}`}
                           aria-label={`${pick(l.title, locale)}${isDone ? ` — ${t("completed")}` : ""}`}
-                          className="press relative grid size-[72px] place-items-center rounded-full"
-                          style={
-                            isDone || isNext
+                          className="press relative grid size-[72px] place-items-center rounded-full animate-[node-in_.5s_cubic-bezier(.22,1,.36,1)_backwards]"
+                          style={{
+                            animationDelay: `${Math.min(li, 8) * 60}ms`,
+                            ...(isDone || isNext
                               ? { background: color, boxShadow: `0 6px 0 ${darker(color)}` }
-                              : { background: "var(--color-surface-3)", boxShadow: "0 6px 0 var(--color-line-strong)" }
-                          }
+                              : { background: "var(--color-surface-3)", boxShadow: "0 6px 0 var(--color-line-strong)" }),
+                          }}
                         >
                           {isNext && (
                             <span className="absolute -top-11 whitespace-nowrap rounded-xl border-2 border-line bg-surface px-3 py-1.5 text-[12px] font-extrabold uppercase tracking-wide shadow-[0_3px_0_var(--color-line)] animate-[bounce-soft_1.6s_ease-in-out_infinite]" style={{ color }}>
@@ -139,7 +140,7 @@ export default async function LearnPage({ searchParams }: { searchParams: Promis
           <div className="space-y-4 lg:sticky lg:top-8">
             <div className="grid grid-cols-3 gap-2 lg:grid-cols-1 lg:gap-3">
               <div className="card flex items-center gap-3 p-3 lg:p-4">
-                <Flame className={cn("size-8 shrink-0", activeToday ? "fill-amber-bright text-amber" : "text-faint")} aria-hidden />
+                <Flame className={cn("size-8 shrink-0", activeToday ? "fill-amber-bright text-amber animate-[wiggle_.9s_ease-in-out_.4s_backwards]" : "text-faint")} aria-hidden />
                 <div className="min-w-0">
                   <div className="text-xl font-black leading-none">{streak}</div>
                   <div className="text-[11.5px] font-bold text-muted">{t("day streak")}</div>

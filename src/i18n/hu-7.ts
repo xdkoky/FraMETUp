@@ -558,4 +558,7 @@ export const HU7: Record<string, string> = {
   "Saving…": "Mentés…",
   "Upload failed.": "A feltöltés nem sikerült.",
   "Only PNG and JPEG pictures are allowed.": "Csak PNG és JPEG kép engedélyezett.",
+  "Sound effects": "Hangeffektek",
+  "Sound effects on": "Hangeffektek bekapcsolva",
+  "Sound effects off": "Hangeffektek kikapcsolva",
 };

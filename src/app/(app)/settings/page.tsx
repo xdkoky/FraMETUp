@@ -11,6 +11,7 @@ import { DeleteAccountForm, PasswordForm, PrivacyForm } from "./forms";
 import { getT } from "@/i18n/server";
 import { getThemePref } from "@/lib/theme";
 import { ThemeSwitch } from "@/components/shell/theme-switch";
+import { SoundSwitch } from "@/components/shell/ui-sounds";
 import { LocaleSwitch } from "@/i18n/locale-switch";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -37,6 +38,10 @@ export default async function SettingsPage() {
             <div className="flex items-center gap-3">
               <span className="font-bold text-muted">{t("Language")}</span>
               <LocaleSwitch />
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="font-bold text-muted">{t("Sound effects")}</span>
+              <SoundSwitch withLabel />
             </div>
             <p className="basis-full text-[12.5px] text-faint">{t("Auto follows your phone or computer: if it switches to dark mode at night, FraMETUp does too.")}</p>
           </div>

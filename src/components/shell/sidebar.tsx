@@ -9,6 +9,7 @@ import { logoutAction } from "@/app/(auth)/actions";
 import { Wordmark } from "@/components/brand";
 import { LocaleSwitch } from "@/i18n/locale-switch";
 import { ThemeSwitch, type ThemePref } from "./theme-switch";
+import { SoundSwitch } from "./ui-sounds";
 import { useT } from "@/i18n/client";
 import { GROWTH_NAV, NAV_ITEMS, SECONDARY_NAV } from "./nav-items";
 import { prepareTabMove } from "./app-motion";
@@ -72,7 +73,10 @@ export function Sidebar({ isAdmin, isStaff, displayName, pendingReviews, theme }
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1.5">
           <LocaleSwitch />
-          <ThemeSwitch initial={theme} />
+          <div className="flex items-center gap-1.5">
+            <SoundSwitch />
+            <ThemeSwitch initial={theme} />
+          </div>
         </div>
       </div>
       <form action={logoutAction}>

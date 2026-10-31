@@ -26,6 +26,8 @@ import { LocaleSwitch } from "@/i18n/locale-switch";
 import { cn } from "@/lib/utils";
 import type { Answer, Answers, Level, Question } from "@/lib/quiz/questions";
 import { skipQuiz, submitQuiz, type QuizOutcome } from "./actions";
+import { play } from "@/lib/sound";
+import { Confetti } from "@/components/ui/celebrate";
 import { FloorPlan, FrameIllustration, LightIllustration, ShotPanel } from "./illustrations";
 
 const ICONS = { Users, ListChecks, PenTool, Scissors, Video, Megaphone, Presentation, BookOpen } as const;
@@ -83,6 +85,7 @@ export function QuizFlow({
     start(async () => {
       const r = await submitQuiz(answers);
       setResult(r);
+      if (!("error" in r)) play("complete");
       setStep(questions.length);
     });
 
@@ -217,6 +220,7 @@ function OptionCard({
     <button
       type="button"
       role="radio"
+      data-sound="select"
       aria-checked={selected}
       aria-label={label}
       onClick={onClick}
@@ -479,8 +483,9 @@ function Results({ result, skills, onRetry }: { result: QuizOutcome; skills: Rec
     .sort((a, b) => skills[a[0]].category.localeCompare(skills[b[0]].category));
   return (
     <div>
-      <div className="text-center">
-        <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-amber-soft text-amber">
+      <div className="relative text-center">
+        <Confetti pieces={36} />
+        <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-amber-soft text-amber animate-[pop_.5s_cubic-bezier(.22,1,.36,1)]">
           <Sparkles className="size-6" aria-hidden />
         </div>
         <h1 className="mt-4 font-display text-[2.1rem]">{t("Your starting map is ready")}</h1>
