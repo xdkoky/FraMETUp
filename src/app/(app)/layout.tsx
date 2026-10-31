@@ -15,7 +15,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const pendingReviews = await db.peerReviewRequest.count({ where: { reviewerId: user.id, status: "PENDING" } });
   return (
     <div className="min-h-dvh">
-      <Sidebar isAdmin={user.roles.includes("ADMIN")} displayName={user.displayName} pendingReviews={pendingReviews} theme={await getThemePref()} />
+      <Sidebar isAdmin={user.roles.includes("ADMIN")} isStaff={user.roles.includes("ADMIN") || user.roles.includes("INSTRUCTOR")} displayName={user.displayName} pendingReviews={pendingReviews} theme={await getThemePref()} />
       <SwipeNav />
       <div className="pb-[calc(6.5rem+env(safe-area-inset-bottom))] lg:pb-0 lg:pl-60">
         {user.isDemo && <DemoBanner>{t("Demonstration account — all people, projects and feedback here are fictional.")}</DemoBanner>}
