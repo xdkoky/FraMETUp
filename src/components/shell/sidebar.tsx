@@ -12,7 +12,7 @@ import { ThemeSwitch, type ThemePref } from "./theme-switch";
 import { SoundSwitch } from "./ui-sounds";
 import { useT } from "@/i18n/client";
 import { GROWTH_NAV, NAV_ITEMS, SECONDARY_NAV } from "./nav-items";
-import { prepareTabMove } from "./app-motion";
+import { slideToTab, useNavTarget } from "./app-motion";
 
 function Logo() {
   const t = useT();
@@ -32,6 +32,7 @@ export function Sidebar({ isAdmin, isStaff, displayName, pendingReviews, theme }
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+  const navTarget = useNavTarget();
   useEffect(() => setOpen(false), [pathname]);
 
   const link = ({ href, label, icon: Icon }: Item) => (
@@ -99,7 +100,7 @@ export function Sidebar({ isAdmin, isStaff, displayName, pendingReviews, theme }
       </aside>
 
       {/* Phone: slim top bar + floating tab bar (swipe between tabs, see app-motion) */}
-      <div className="sticky top-0 z-30 flex items-center justify-between border-b-2 border-line bg-surface/95 px-5 pb-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] backdrop-blur lg:hidden">
+      <div data-topbar className="sticky top-0 z-30 flex items-center justify-between border-b-2 border-line bg-surface/95 px-5 pb-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] backdrop-blur lg:hidden">
         <Logo />
         <LocaleSwitch />
       </div>
@@ -108,20 +109,22 @@ export function Sidebar({ isAdmin, isStaff, displayName, pendingReviews, theme }
         className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 flex gap-1 rounded-[26px] border-2 border-line bg-surface/95 p-1.5 shadow-[0_4px_0_var(--color-line),0_14px_32px_-12px_rgba(20,30,50,0.25)] backdrop-blur lg:hidden"
       >
         {NAV_ITEMS.map(({ href, short, icon: Icon }) => {
-          const on = isActive(href);
+          const on = navTarget ? navTarget === href : isActive(href);
           return (
             <Link
               key={href}
               href={href}
               prefetch
-              onClick={() => prepareTabMove(pathname, href)}
+              onClick={(e) => {
+                if (slideToTab(href)) e.preventDefault();
+              }}
               aria-current={on ? "page" : undefined}
               className={cn(
                 "press relative flex h-14 min-w-0 flex-col items-center justify-center gap-0.5 rounded-[20px] transition-[flex-grow,background-color] duration-300 ease-out",
                 on ? "flex-[1.7] bg-accent text-white shadow-[0_4px_0_var(--color-accent-strong)]" : "flex-1 text-faint",
               )}
             >
-              <Icon className={cn("transition-transform duration-300", on ? "size-[22px] -translate-y-0.5" : "size-[22px]")} aria-hidden />
+              <Icon key={on ? "on" : "off"} className={cn("size-[22px]", on && "-translate-y-0.5 animate-[tab-pop_.42s_cubic-bezier(.22,1,.36,1)]")} aria-hidden />
               <span className={cn("max-w-full truncate px-1 text-[10px] font-extrabold uppercase leading-none tracking-wide", on ? "block" : "sr-only")}>{t(short)}</span>
               {href === "/feedback" && pendingReviews > 0 && <span className="absolute right-[22%] top-2 size-2.5 rounded-full border-2 border-surface bg-amber-bright" aria-hidden />}
             </Link>
