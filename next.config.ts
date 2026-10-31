@@ -11,6 +11,8 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   experimental: {
     serverActions: { bodySizeLimit: "11mb" },
+    // Keep recently visited tabs in the client cache so switching back is instant, like an app.
+    staleTimes: { dynamic: 30, static: 300 },
   },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];

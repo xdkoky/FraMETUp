@@ -8,19 +8,17 @@ import { cn } from "@/lib/utils";
 import { logoutAction } from "@/app/(auth)/actions";
 import { Wordmark } from "@/components/brand";
 import { LocaleSwitch } from "@/i18n/locale-switch";
+import { ThemeSwitch, type ThemePref } from "./theme-switch";
 import { useT } from "@/i18n/client";
 import { GROWTH_NAV, NAV_ITEMS, SECONDARY_NAV } from "./nav-items";
+import { prepareTabMove } from "./app-motion";
 
 function Logo() {
   const t = useT();
   return (
     <Link href="/dashboard" className="flex items-center gap-2.5" aria-label={t("FraMETUp home")}>
-      <svg viewBox="0 0 32 32" className="size-7" aria-hidden>
-        <rect x="2" y="9" width="28" height="20" rx="3" fill="#FFFFFF" stroke="var(--color-line-strong)" />
-        <path d="M3 9 L7 3 H13 L9 9 Z M13 9 L17 3 H23 L19 9 Z" fill="var(--color-amber-bright)" />
-        <circle cx="16" cy="19" r="4.5" fill="none" stroke="var(--color-accent)" strokeWidth="1.6" />
-        <circle cx="16" cy="19" r="1.4" fill="var(--color-accent)" />
-      </svg>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/icons/icon-192.png" alt="" className="size-8 rounded-[9px]" aria-hidden />
       <Wordmark />
     </Link>
   );
@@ -28,7 +26,7 @@ function Logo() {
 
 type Item = { href: string; label: string; icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean }> };
 
-export function Sidebar({ isAdmin, displayName, pendingReviews }: { isAdmin: boolean; displayName: string; pendingReviews: number }) {
+export function Sidebar({ isAdmin, displayName, pendingReviews, theme }: { isAdmin: boolean; displayName: string; pendingReviews: number; theme: ThemePref }) {
   const t = useT();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -72,7 +70,10 @@ export function Sidebar({ isAdmin, displayName, pendingReviews }: { isAdmin: boo
           <div className="truncate text-sm text-text">{displayName}</div>
           <div className="text-xs text-faint">{t("METU · Film Directing")}</div>
         </div>
-        <LocaleSwitch />
+        <div className="flex shrink-0 flex-col items-end gap-1.5">
+          <LocaleSwitch />
+          <ThemeSwitch initial={theme} />
+        </div>
       </div>
       <form action={logoutAction}>
         <button className="flex w-full items-center gap-3.5 rounded-2xl px-3.5 py-2.5 text-[13px] font-extrabold uppercase tracking-wide text-muted hover:bg-surface-2">
@@ -93,44 +94,48 @@ export function Sidebar({ isAdmin, displayName, pendingReviews }: { isAdmin: boo
         {footer}
       </aside>
 
-      {/* Phone: slim top bar + bottom tab bar */}
-      <div className="sticky top-0 z-30 flex h-14 items-center justify-between border-b-2 border-line bg-surface px-4 lg:hidden">
+      {/* Phone: slim top bar + floating tab bar (swipe between tabs, see app-motion) */}
+      <div className="sticky top-0 z-30 flex items-center justify-between border-b-2 border-line bg-surface/95 px-5 pb-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] backdrop-blur lg:hidden">
         <Logo />
         <LocaleSwitch />
       </div>
       <nav
         aria-label={t("Main sections")}
-        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t-2 border-line bg-surface pb-[env(safe-area-inset-bottom)] lg:hidden"
+        className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 flex gap-1 rounded-[26px] border-2 border-line bg-surface/95 p-1.5 shadow-[0_4px_0_var(--color-line),0_14px_32px_-12px_rgba(20,30,50,0.25)] backdrop-blur lg:hidden"
       >
-        {NAV_ITEMS.map(({ href, short, icon: Icon }) => (
-          <Link
-            key={href}
-            href={href}
-            aria-current={isActive(href) ? "page" : undefined}
-            className={cn("relative flex flex-col items-center py-2", isActive(href) ? "text-accent" : "text-faint")}
-          >
-            <span className={cn("grid size-11 place-items-center rounded-2xl border-2", isActive(href) ? "border-accent/45 bg-accent-soft" : "border-transparent")}>
-              <Icon className="size-[22px]" aria-hidden />
-            </span>
-            <span className="sr-only">{t(short)}</span>
-            {href === "/feedback" && pendingReviews > 0 && <span className="absolute right-[26%] top-2.5 size-2.5 rounded-full border-2 border-surface bg-amber-bright" aria-hidden />}
-          </Link>
-        ))}
+        {NAV_ITEMS.map(({ href, short, icon: Icon }) => {
+          const on = isActive(href);
+          return (
+            <Link
+              key={href}
+              href={href}
+              prefetch
+              onClick={() => prepareTabMove(pathname, href)}
+              aria-current={on ? "page" : undefined}
+              className={cn(
+                "press relative flex h-14 min-w-0 flex-col items-center justify-center gap-0.5 rounded-[20px] transition-[flex-grow,background-color] duration-300 ease-out",
+                on ? "flex-[1.7] bg-accent text-white shadow-[0_4px_0_var(--color-accent-strong)]" : "flex-1 text-faint",
+              )}
+            >
+              <Icon className={cn("transition-transform duration-300", on ? "size-[22px] -translate-y-0.5" : "size-[22px]")} aria-hidden />
+              <span className={cn("max-w-full truncate px-1 text-[10px] font-extrabold uppercase leading-none tracking-wide", on ? "block" : "sr-only")}>{t(short)}</span>
+              {href === "/feedback" && pendingReviews > 0 && <span className="absolute right-[22%] top-2 size-2.5 rounded-full border-2 border-surface bg-amber-bright" aria-hidden />}
+            </Link>
+          );
+        })}
         <button
           onClick={() => setOpen(true)}
           aria-expanded={open}
-          className={cn("flex flex-col items-center py-2", open ? "text-accent" : "text-faint")}
+          className={cn("press flex h-14 flex-1 flex-col items-center justify-center rounded-[20px]", open ? "bg-accent-soft text-accent" : "text-faint")}
         >
-          <span className="grid size-11 place-items-center rounded-2xl border-2 border-transparent">
-            <Menu className="size-[22px]" aria-hidden />
-          </span>
+          <Menu className="size-[22px]" aria-hidden />
           <span className="sr-only">{t("More")}</span>
         </button>
       </nav>
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label={t("Navigation")}>
           <div className="absolute inset-0 bg-black/30 animate-[fadein_.15s_ease-out]" onClick={() => setOpen(false)} />
-          <div className="absolute inset-x-0 bottom-0 flex max-h-[85dvh] flex-col rounded-t-3xl border-t-2 border-line bg-surface px-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3 animate-[sheetup_.22s_ease-out]">
+          <div className="absolute inset-x-0 bottom-0 flex max-h-[85dvh] flex-col rounded-t-3xl border-t-2 border-line bg-surface px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3 animate-[sheetup_.22s_ease-out]">
             <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-surface-3" aria-hidden />
             <div className="mb-3 flex items-center justify-between px-2">
               <Logo />

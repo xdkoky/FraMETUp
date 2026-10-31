@@ -228,7 +228,7 @@ function OptionCard({
     >
       {children}
       {selected && (
-        <span className="absolute right-2.5 top-2.5 flex size-6 items-center justify-center rounded-full bg-accent text-ink">
+        <span className="absolute right-2.5 top-2.5 flex size-6 items-center justify-center rounded-full bg-accent text-white">
           <Check className="size-3.5" aria-hidden />
         </span>
       )}
@@ -262,7 +262,7 @@ function QuestionBody({ q, answer, onAnswer }: { q: Question; answer: Answer | u
                 on ? "border-accent bg-accent-soft text-text" : "border-line-soft bg-ink/40 text-muted hover:-translate-y-0.5 hover:border-line hover:text-text",
               )}
             >
-              <span className={cn("flex size-9 items-center justify-center rounded-xl", on ? "bg-accent text-ink" : "bg-surface-2 text-faint")}>
+              <span className={cn("flex size-9 items-center justify-center rounded-xl", on ? "bg-accent text-white" : "bg-surface-2 text-faint")}>
                 {on ? <Check className="size-4" aria-hidden /> : <Icon className="size-4" aria-hidden />}
               </span>
               <span className="leading-snug">{t(o.label)}</span>
@@ -343,7 +343,7 @@ function QuestionBody({ q, answer, onAnswer }: { q: Question; answer: Answer | u
           <span
             className={cn(
               "flex size-8 shrink-0 items-center justify-center rounded-lg font-mono text-sm",
-              answer === o.id ? "bg-accent text-ink" : "bg-surface-2 text-faint",
+              answer === o.id ? "bg-accent text-white" : "bg-surface-2 text-faint",
             )}
           >
             {LETTERS[i]}
@@ -377,7 +377,7 @@ function OrderBody({ q, answer, onAnswer }: { q: Extract<Question, { kind: "orde
               <span
                 className={cn(
                   "flex size-8 shrink-0 items-center justify-center rounded-full font-mono text-sm transition-colors",
-                  pos >= 0 ? "bg-accent text-ink" : "border border-dashed border-line text-faint",
+                  pos >= 0 ? "bg-accent text-white" : "border border-dashed border-line text-faint",
                 )}
               >
                 {pos >= 0 ? pos + 1 : "·"}

@@ -50,7 +50,7 @@ function AuthArt() {
       ))}
       {pts.map(([x, y], i) => (
         <g key={i}>
-          <circle cx={x} cy={y} r={i % 4 === 0 ? 9 : 6} fill="#FFFFFF" stroke={i % 5 === 0 ? "var(--color-amber-bright)" : i % 2 ? "var(--color-accent)" : "#4A5263"} strokeWidth="1.5" strokeDasharray={i % 3 === 2 ? "3 3" : undefined} />
+          <circle cx={x} cy={y} r={i % 4 === 0 ? 9 : 6} fill="var(--color-surface)" stroke={i % 5 === 0 ? "var(--color-amber-bright)" : i % 2 ? "var(--color-accent)" : "#4A5263"} strokeWidth="1.5" strokeDasharray={i % 3 === 2 ? "3 3" : undefined} />
         </g>
       ))}
     </svg>

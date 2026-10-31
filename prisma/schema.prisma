@@ -48,6 +48,7 @@ model User {
   aiAssessments   AIAssessment[]
   masterySnapshots MasterySnapshot[]
   experienceEvents ExperienceEvent[]
+  lessonMedia     LessonMedia[]
   reflections     Reflection[]
   challengeCompletions ChallengeCompletion[]
   challengesCreated Challenge[]
@@ -716,4 +717,42 @@ model AuditLog {
 
   @@index([actorId, createdAt])
   @@index([targetType, targetId])
+}
+
+/// Pictures attached to a lesson. REFERENCE = curated by an instructor/admin and shown to
+/// everyone, with credit and licence. EXAMPLE = a student's drill result, private unless shared.
+enum LessonMediaKind {
+  REFERENCE
+  EXAMPLE
+}
+
+enum LessonMediaVisibility {
+  PRIVATE
+  SHARED
+}
+
+model LessonMedia {
+  id              String                @id @default(cuid())
+  lessonId        String
+  uploaderId      String
+  uploader        User                  @relation(fields: [uploaderId], references: [id], onDelete: Cascade)
+  kind            LessonMediaKind
+  visibility      LessonMediaVisibility @default(PRIVATE)
+  storageKey      String
+  mimeType        String
+  /// Optional second picture for a before/after comparison.
+  afterStorageKey String?
+  afterMimeType   String?
+  beforeLabel     String?
+  afterLabel      String?
+  caption         String
+  credit          String
+  license         String
+  sourceUrl       String?
+  pinned          Boolean               @default(false)
+  createdAt       DateTime              @default(now())
+  deletedAt       DateTime?
+
+  @@index([lessonId, kind])
+  @@index([uploaderId])
 }

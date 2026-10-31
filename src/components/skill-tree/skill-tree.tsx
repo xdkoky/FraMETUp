@@ -379,7 +379,7 @@ function TreeInner({ data }: { data: TreeData }) {
             className="!bg-transparent"
             aria-label={t("Director skill tree")}
           >
-            <Background variant={BackgroundVariant.Dots} gap={28} size={1} color="#D9DEE6" />
+            <Background variant={BackgroundVariant.Dots} gap={28} size={1} color="var(--color-line-strong)" />
             <Controls showInteractive={false} position="bottom-left" />
           </ReactFlow>
         ) : (

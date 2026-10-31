@@ -84,3 +84,39 @@ export function canAdministerTaxonomy(viewer: Viewer): boolean {
 export function canViewDevelopmentData(viewer: Viewer, ownerId: string): boolean {
   return viewer.id === ownerId;
 }
+
+// ── Lesson photos ──
+
+export interface LessonMediaFacts {
+  kind: "REFERENCE" | "EXAMPLE";
+  visibility: "PRIVATE" | "SHARED";
+  uploaderId: string;
+  deletedAt: Date | null;
+  uploaderCohortIds: string[];
+}
+
+const isStaff = (v: Viewer) => v.roles.includes("INSTRUCTOR") || v.roles.includes("ADMIN");
+
+/** Instructors and admins curate the reference pictures every student sees. */
+export function canCurateLessonMedia(viewer: Viewer): boolean {
+  return isStaff(viewer);
+}
+
+/**
+ * References are visible to everyone signed in. A student's example is private to them;
+ * if they share it, classmates in a shared cohort and staff can see it.
+ */
+export function canViewLessonMedia(viewer: Viewer, m: LessonMediaFacts): boolean {
+  if (m.deletedAt) return false;
+  if (m.kind === "REFERENCE") return true;
+  if (viewer.id === m.uploaderId) return true;
+  if (m.visibility !== "SHARED") return false;
+  return isStaff(viewer) || viewer.cohortIds.some((c) => m.uploaderCohortIds.includes(c));
+}
+
+/** Uploaders can manage their own pictures; staff can manage references and moderate shared examples. */
+export function canManageLessonMedia(viewer: Viewer, m: Pick<LessonMediaFacts, "kind" | "visibility" | "uploaderId" | "deletedAt">): boolean {
+  if (m.deletedAt) return false;
+  if (viewer.id === m.uploaderId) return true;
+  return isStaff(viewer) && (m.kind === "REFERENCE" || m.visibility === "SHARED");
+}

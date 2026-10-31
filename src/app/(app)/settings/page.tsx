@@ -9,6 +9,9 @@ import { buttonClass } from "@/components/ui/button";
 import { Card, CardHeader, PageHeader } from "@/components/ui/misc";
 import { DeleteAccountForm, PasswordForm, PrivacyForm } from "./forms";
 import { getT } from "@/i18n/server";
+import { getThemePref } from "@/lib/theme";
+import { ThemeSwitch } from "@/components/shell/theme-switch";
+import { LocaleSwitch } from "@/i18n/locale-switch";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT();
@@ -24,6 +27,20 @@ export default async function SettingsPage() {
     <Page className="max-w-3xl">
       <PageHeader eyebrow={t("Settings")} title={t("Privacy & data")} description={t("Your reflections, feedback and skill estimates are private by default. You decide what to share.")} />
       <div className="space-y-6">
+        <Card>
+          <CardHeader title={t("Appearance & language")} />
+          <div className="flex flex-wrap items-center gap-x-8 gap-y-4 px-5 pb-5 pt-3 text-sm">
+            <div className="flex items-center gap-3">
+              <span className="font-bold text-muted">{t("Theme")}</span>
+              <ThemeSwitch initial={await getThemePref()} />
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="font-bold text-muted">{t("Language")}</span>
+              <LocaleSwitch />
+            </div>
+            <p className="basis-full text-[12.5px] text-faint">{t("Auto follows your phone or computer: if it switches to dark mode at night, FraMETUp does too.")}</p>
+          </div>
+        </Card>
         <Card>
           <CardHeader title={t("Privacy")} />
           <div className="p-5">
